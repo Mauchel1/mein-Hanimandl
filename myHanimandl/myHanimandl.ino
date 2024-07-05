@@ -2,26 +2,24 @@
 #include <Button.h>
 #include <Servo.h>
 #include <Encoder.h>
-#include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
-#include <Adafruit_GFX.h>    // Core graphics library
+#include <TFT.h>
 #include <SPI.h>
 #include "NoDelay.h"
 #include <EEPROM.h>
-
 
 #define MAXIMALGEWICHT 1000  // Maximales Gewicht
 
 //const int TFT_MOSI 11  // Data out INTERN HARDWARE SPI pins
 //const int TFT_SCLK 13  // Clock out INTERN HARDWARE SPI pins
 const int TFT_CS =  10;
-const int TFT_RST = 9; // Or set to -1 and connect to Arduino RESET pin
-const int TFT_DC =  8;
+const int TFT_RST = 8; // Or set to -1 and connect to Arduino RESET pin
+const int TFT_DC =  9;
 
 const int LOADCELL_DOUT_PIN = 18;
 const int LOADCELL_SCK_PIN = 19;
 
-const int ENCODER_PIN_A = 2;
-const int ENCODER_PIN_B = 3;
+const int ENCODER_PIN_A = 3;
+const int ENCODER_PIN_B = 2;
 const int ENCODER_PIN_SW = 4;
 
 const int SERVO_PIN = 5;
@@ -44,14 +42,18 @@ Servo servo;
 
 HX711 scale;
 int pos = 0;    // variable to store the servo position
+int oldPos = 0;    // variable to store the old servo position
 long oldPosition  = -999;
 long oldReading = 0;
 
 noDelay buzzertimer(1000, false);
 bool buzzerOn = false;
 
-Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+TFT myScreen = TFT(TFT_CS, TFT_DC, TFT_RST);
 
+char printout[4];
+
+int counter = 0;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -66,11 +68,20 @@ void setup() {
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
   servo.attach(SERVO_PIN);
+  pos = servo.read();
 
-  tft.initR(INITR_BLACKTAB);
-  tft.fillScreen(ST77XX_BLACK);
+  myScreen.begin();
 
-  buzzertimer.start();
+  myScreen.background(0,0,0);  // clear the screen with black
+
+  myScreen.stroke(255,0,255);
+  myScreen.text("Welcome",2,0);
+
+  // increase font size for text in loop()
+  myScreen.setTextSize(4);
+
+
+  //buzzertimer.start();
 }
 
 void loop() {
@@ -79,6 +90,7 @@ void loop() {
   long newPosition = encoder.read();
   if (newPosition != oldPosition) {
     oldPosition = newPosition;
+    Serial.print("pos: ");
     Serial.println(newPosition);
     pos = newPosition;
   }
@@ -107,7 +119,7 @@ void loop() {
   {
     Serial.println("Button 3 pressed");
   }
-  if (switch_pos1.has_changed())
+  if (switch_pos1.pressed())
   {
     Serial.println("Switch 1 changed");
   }
@@ -116,7 +128,7 @@ void loop() {
     Serial.println("Switch 2 changed");
   }
 
-  if (scale.is_ready()) {
+  /*if (scale.is_ready()) {
     long reading = scale.read();
     if ((abs(reading - oldReading)) > 1500)
     {
@@ -126,10 +138,14 @@ void loop() {
     }
   } else {
     Serial.println("HX711 not found.");
+  }*/
+
+  if(oldPos != pos) {
+    servo.write(pos);
+    oldPos = pos;
+    Serial.println(servo.read());
   }
 
-  servo.write(pos);
-
-  delay (100);
+  delay (50);
 
 }
