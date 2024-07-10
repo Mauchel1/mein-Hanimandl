@@ -41,6 +41,15 @@ Encoder encoder(ENCODER_PIN_A, ENCODER_PIN_B);
 Servo servo;
 
 HX711 scale;
+
+enum Modus {
+   Modus_Setup,
+   Modus_Manuel,
+   Modus_Automatic
+};
+
+Modus currentModus;
+
 int pos = 0;    // variable to store the servo position
 int oldPos = 0;    // variable to store the old servo position
 long oldPosition  = -999;
@@ -82,6 +91,21 @@ void setup() {
 
 
   //buzzertimer.start();
+
+  // set correct Modus
+  
+  if (switch_pos1.pressed())
+  {
+    currentModus = Modus_Manuel();
+  }
+  else if (switch_pos2.pressed()) 
+  {
+    currentModus = Modus_Automatic();
+  }
+  else
+  {
+    currentModus = Modus_Setup();
+  }
 }
 
 void loop() {
