@@ -43,12 +43,29 @@ Servo servo;
 HX711 scale;
 
 enum Modus {
-   Modus_Setup,
-   Modus_Manuel,
-   Modus_Automatic
+  Modus_Setup,
+  Modus_Manuel,
+  Modus_Automatic
+};
+
+enum SetupMenu {
+  Setup_Calibrate, //first
+  Setup_Servo,
+  Setup_Glas,
+  Setup_Automatic,
+  Setup_Parameter  //last
+};
+
+static const char * const SetupMenuEntries[] = {
+  [Setup_Calibrate] = "Kalibrieren",
+  [Setup_Servo] = "Servo",
+  [Setup_Glas] = "Glas",
+  [Setup_Automatic] = "Automatik",
+  [Setup_Parameter] = "Parameter"
 };
 
 Modus currentModus;
+Modus lastModus = -1;
 
 int pos = 0;    // variable to store the servo position
 int oldPos = 0;    // variable to store the old servo position
@@ -112,18 +129,29 @@ void loop() {
 
 // State Machine for Modes
 
-switch(currentModus) //TODO add entry/leave action 
+switch(currentModus)  
   {
     case Modus_Manuel:
-
-      Serial.println("Modus_Manuel");
-
+      if(currentModus != lastModus)
+      {
+        lastModus = currentModus;
+        Serial.println("enter Modus_Manuel");
+      }
       break;
     case Modus_Automatic:
-      Serial.println("Modus_Automatic");
+      if(currentModus != lastModus)
+      {
+        lastModus = currentModus;
+        Serial.println("enter Modus_Automatic");
+      }
       break;
     case Modus_Setup:
-      Serial.println("Modus_Setup");
+      if(currentModus != lastModus)
+      {
+        lastModus = currentModus;
+        Serial.println("enter Modus_Setup");
+        SetupInitScreen();
+      }
       break;
   }
 
