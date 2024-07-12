@@ -127,6 +127,23 @@ void setup() {
 
 void loop() {
 
+  //Encoder 
+  long newPosition = encoder.read()/4;
+  if (newPosition != oldPosition) {
+    switch (currentModus)
+    {
+      case Modus_Manuel:
+        pos = newPosition;
+        break;
+      case Modus_Automatic:
+        break;
+      case Modus_Setup:
+        EncoderChanged(newPosition-oldPosition);
+        break;
+    }
+    oldPosition = newPosition;    
+  }
+
 // State Machine for Modes
 
 switch(currentModus)  
@@ -155,14 +172,6 @@ switch(currentModus)
       break;
   }
 
-
-  long newPosition = encoder.read();
-  if (newPosition != oldPosition) {
-    oldPosition = newPosition;
-    Serial.print("pos: ");
-    Serial.println(newPosition);
-    pos = newPosition;
-  }
 
   if(buzzertimer.update())
   {//Checks to see if set time has past
@@ -222,7 +231,7 @@ switch(currentModus)
   if(oldPos != pos) {
     servo.write(pos);
     oldPos = pos;
-    Serial.println(servo.read());
+    Serial.println("Servoread: " + servo.read());
   }
 
   delay (50);
