@@ -94,22 +94,39 @@ void setup() {
 
   // set correct Modus
   
-  if (switch_pos1.pressed())
+  if ( switch_pos1.PRESSED)
   {
-    currentModus = Modus_Manuel();
+    currentModus = Modus_Manuel;
   }
-  else if (switch_pos2.pressed()) 
+  else if (switch_pos2.PRESSED) 
   {
-    currentModus = Modus_Automatic();
+    currentModus = Modus_Automatic;
   }
   else
   {
-    currentModus = Modus_Setup();
+    currentModus = Modus_Setup;
   }
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+
+// State Machine for Modes
+
+switch(currentModus) //TODO add entry/leave action 
+  {
+    case Modus_Manuel:
+
+      Serial.println("Modus_Manuel");
+
+      break;
+    case Modus_Automatic:
+      Serial.println("Modus_Automatic");
+      break;
+    case Modus_Setup:
+      Serial.println("Modus_Setup");
+      break;
+  }
+
 
   long newPosition = encoder.read();
   if (newPosition != oldPosition) {
@@ -143,14 +160,24 @@ void loop() {
   {
     Serial.println("Button 3 pressed");
   }
-  if (switch_pos1.pressed())
+
+
+  if (switch_pos1.released() && switch_pos2.RELEASED || switch_pos2.released() && switch_pos1.RELEASED)
   {
-    Serial.println("Switch 1 changed");
-  }
-  if (switch_pos2.has_changed())
+    currentModus = Modus_Setup;
+    Serial.println("Modus_Setup");
+  }  
+  else if (switch_pos1.pressed())
   {
-    Serial.println("Switch 2 changed");
+    Serial.println("Modus_Manuel");
+    currentModus = Modus_Manuel;
   }
+  else if (switch_pos2.pressed())
+  {
+    currentModus = Modus_Automatic;
+    Serial.println("Modus_Automatic");
+  }
+
 
   /*if (scale.is_ready()) {
     long reading = scale.read();
