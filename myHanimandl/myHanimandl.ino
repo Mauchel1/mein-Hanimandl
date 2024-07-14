@@ -67,6 +67,8 @@ static const char * const SetupMenuEntries[] = {
 Modus currentModus;
 Modus lastModus = -1;
 
+int taraweight = 500; //weight to calibrate the scale in g
+
 int pos = 0;    // variable to store the servo position
 int oldPos = 0;    // variable to store the old servo position
 long oldPosition  = -999;
@@ -123,55 +125,52 @@ void setup() {
   {
     currentModus = Modus_Setup;
   }
+
+  ReadEncoder();
+}
+
+void handleButton()
+{
+
+}
+
+long ReadScale(){
+  if (scale.is_ready()) {
+    long reading = round(scale.get_units(2));
+    /*if ((abs(reading - oldReading)) > 1500)
+    {
+      oldReading = reading;
+    }*/
+    return reading;
+  } else {
+    return -999;
+  }
+}
+long ReadEncoder()
+{
+  long newPosition = encoder.read()/4;
+  if (newPosition != oldPosition) 
+  {
+    long returnvalue = newPosition-oldPosition;
+    oldPosition = newPosition;    
+    return returnvalue;
+  }
+  return 0;
 }
 
 void loop() {
 
-  //Encoder 
-  long newPosition = encoder.read()/4;
-  if (newPosition != oldPosition) {
-    switch (currentModus)
-    {
+  //Encoder //TODO MOVE TO STATE MACHINE FOR DIFFENENTIAL OPTIONS
+  /*
       case Modus_Manuel:
         pos = newPosition;
-        break;
-      case Modus_Automatic:
         break;
       case Modus_Setup:
         EncoderChanged(newPosition-oldPosition);
         break;
-    }
-    oldPosition = newPosition;    
-  }
+  }*/
 
-// State Machine for Modes
-
-switch(currentModus)  
-  {
-    case Modus_Manuel:
-      if(currentModus != lastModus)
-      {
-        lastModus = currentModus;
-        Serial.println("enter Modus_Manuel");
-      }
-      break;
-    case Modus_Automatic:
-      if(currentModus != lastModus)
-      {
-        lastModus = currentModus;
-        Serial.println("enter Modus_Automatic");
-      }
-      break;
-    case Modus_Setup:
-      if(currentModus != lastModus)
-      {
-        lastModus = currentModus;
-        Serial.println("enter Modus_Setup");
-        SetupInitScreen();
-      }
-      break;
-  }
-
+  StateMachine();
 
   if(buzzertimer.update())
   {//Checks to see if set time has past
@@ -189,14 +188,15 @@ switch(currentModus)
   {
     Serial.println("Button 1 pressed");
   }
-  if (button_stop.pressed())
+  /*if (button_stop.pressed())
   {
     Serial.println("Button 2 pressed");
   }
+  
   if (button_select.pressed())
   {
     Serial.println("Button 3 pressed");
-  }
+  }*/
 
 
   if (switch_pos1.released() && switch_pos2.RELEASED || switch_pos2.released() && switch_pos1.RELEASED)
@@ -214,19 +214,6 @@ switch(currentModus)
     currentModus = Modus_Automatic;
     Serial.println("Modus_Automatic");
   }
-
-
-  /*if (scale.is_ready()) {
-    long reading = scale.read();
-    if ((abs(reading - oldReading)) > 1500)
-    {
-      Serial.print("HX711 reading: ");
-      Serial.println(reading);
-      oldReading = reading;
-    }
-  } else {
-    Serial.println("HX711 not found.");
-  }*/
 
   if(oldPos != pos) {
     servo.write(pos);

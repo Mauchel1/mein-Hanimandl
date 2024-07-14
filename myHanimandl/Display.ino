@@ -3,6 +3,10 @@ static int16_t Height_Header = 33;
 static int16_t Margin = 2;
 static int16_t Margin_Item = 25;
 static int16_t triangleSize = 13;
+
+static int16_t SingleCharHeight = 8;
+static int16_t SingleCharWidth = 6;
+
 SetupMenu currentMenu;
 
 void SetupInitScreen(){
@@ -17,9 +21,50 @@ void SetupInitScreen(){
   myScreen.setTextSize(2);
 
   for(int item = Setup_Calibrate; item<=Setup_Parameter; item++) {
-    myScreen.text(SetupMenuEntries[item], Margin_Item, (item * 20) + 33 );
+    myScreen.text(SetupMenuEntries[item], Margin_Item, (item * 20) + Height_Header );
   }
   setCursor(currentMenu, 0xFFFF);
+}
+
+void CalibScreen1(){
+
+  myScreen.background(0,0,0);  // clear the screen with black
+  myScreen.stroke(255,255,255);
+  myScreen.setTextSize(3);
+
+  myScreen.text("Kalib.",Width_Header,Margin);
+
+  myScreen.setTextSize(2);
+
+  myScreen.setCursor(Margin_Item, (0 * 20) + Height_Header);
+  myScreen.println("Waage leer");
+  myScreen.println("    machen!");
+
+  myScreen.text("Ok", Margin_Item, (3 * 20) + Height_Header );
+
+  setCursor(3, 0xFFFF);
+}
+
+void CalibScreen2()
+{
+  myScreen.fillRect(0, Height_Header, myScreen.width(), 60, 0x0000);
+
+  myScreen.text("Waage mit", Margin_Item, (0 * 20) + Height_Header );
+  myScreen.text(" beladen", Margin_Item, (2 * 20) + Height_Header );
+}
+
+void CalibScreenResult()
+{
+  myScreen.fillRect(0, Height_Header, myScreen.width(), 60, 0x0000);
+
+  myScreen.setCursor(Margin_Item, (0 * 20) + Height_Header);
+  myScreen.println("Erfolgreich");
+}
+
+void drawMsg(char msg[], int x, int y, int textsize=2)
+{
+  myScreen.setTextSize(textsize);
+  myScreen.text(msg, x, y );
 }
 
 void setCursor(SetupMenu item, color color)
@@ -33,10 +78,30 @@ void changeCurrentMenu (SetupMenu newMenu)
   setCursor(currentMenu, 0x0000);
   currentMenu = newMenu;
   setCursor(currentMenu, 0xFFFF);
-  Serial.println(currentMenu);
+  Serial.println("NewMenu: " + currentMenu);
 }
 
-void EncoderChanged(int change) 
+void EncoderSelectMenuChanged(int change, int menuItem, int min, int max)
+{
+  if (change == 0) return;
+  if (change > 0) {
+    if(menuItem == max)
+    {
+      changeCurrentMenu(min);
+    } else {
+      changeCurrentMenu(menuItem+1);
+    }
+  } else {
+    if(menuItem == min)
+    {
+      changeCurrentMenu(max);
+    } else {
+      changeCurrentMenu(menuItem-1);
+    }
+  }
+}
+
+/*void EncoderChanged(int change) 
 {
   if (change > 0) {
     if(currentMenu == Setup_Parameter)
@@ -53,4 +118,4 @@ void EncoderChanged(int change)
       changeCurrentMenu(currentMenu-1);
     }
   }
-}
+}*/
