@@ -69,8 +69,10 @@ Modus lastModus = -1;
 
 int taraweight = 500; //weight to calibrate the scale in g
 
-int pos = 0;    // variable to store the servo position
-int oldPos = 0;    // variable to store the old servo position
+int angle = 0;    // variable to store the servo position
+int minAngle = 0;    // variable to store the minimum servo position
+int maxAngle = 180;    // variable to store the maximum servo position
+int oldAngle = 0;    // variable to store the old servo position
 long oldPosition  = -999;
 long oldReading = 0;
 
@@ -95,19 +97,11 @@ void setup() {
 
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
-  servo.attach(SERVO_PIN);
-  pos = servo.read();
+  servo.write(minAngle);
+  servo.attach(SERVO_PIN);//,1000,2000);
+  angle = minAngle;
 
   myScreen.begin();
-
-  myScreen.background(0,0,0);  // clear the screen with black
-
-  myScreen.stroke(255,0,255);
-  myScreen.text("Welcome",2,0);
-
-  // increase font size for text in loop()
-  myScreen.setTextSize(4);
-
 
   //buzzertimer.start();
 
@@ -146,7 +140,8 @@ long ReadScale(){
     return -999;
   }
 }
-long ReadEncoder()
+
+long ReadEncoder() //gives the change of the encoder
 {
   long newPosition = encoder.read()/4;
   if (newPosition != oldPosition) 
@@ -158,17 +153,15 @@ long ReadEncoder()
   return 0;
 }
 
-void loop() {
+void ChangeAngle(int change)
+{
+  if ((angle + change) > maxAngle){return;}
+  if ((angle + change) < minAngle){return;}
+  angle += change;
+}
 
-  //Encoder //TODO MOVE TO STATE MACHINE FOR DIFFENENTIAL OPTIONS
-  /*
-      case Modus_Manuel:
-        pos = newPosition;
-        break;
-      case Modus_Setup:
-        EncoderChanged(newPosition-oldPosition);
-        break;
-  }*/
+
+void loop() {
 
   StateMachine();
 
@@ -188,16 +181,6 @@ void loop() {
   {
     Serial.println("Button 1 pressed");
   }
-  /*if (button_stop.pressed())
-  {
-    Serial.println("Button 2 pressed");
-  }
-  
-  if (button_select.pressed())
-  {
-    Serial.println("Button 3 pressed");
-  }*/
-
 
   if (switch_pos1.released() && switch_pos2.RELEASED || switch_pos2.released() && switch_pos1.RELEASED)
   {
@@ -215,10 +198,11 @@ void loop() {
     Serial.println("Modus_Automatic");
   }
 
-  if(oldPos != pos) {
-    servo.write(pos);
-    oldPos = pos;
-    Serial.println("Servoread: " + servo.read());
+  if(oldAngle != angle) {
+    servo.write(angle);
+    oldAngle = angle;
+    Serial.print("Servowrite: ");
+    Serial.println(angle);
   }
 
   delay (50);

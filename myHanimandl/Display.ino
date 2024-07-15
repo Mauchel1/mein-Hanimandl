@@ -45,21 +45,41 @@ void CalibScreen1(){
   setCursor(3, 0xFFFF);
 }
 
-void CalibScreen2()
-{
+void CalibScreen2(){
   myScreen.fillRect(0, Height_Header, myScreen.width(), 60, 0x0000);
 
   myScreen.text("Waage mit", Margin_Item, (0 * 20) + Height_Header );
   myScreen.text(" beladen", Margin_Item, (2 * 20) + Height_Header );
 }
 
-void CalibScreenResult()
-{
+void CalibScreenResult(){
   myScreen.fillRect(0, Height_Header, myScreen.width(), 60, 0x0000);
 
   myScreen.setCursor(Margin_Item, (0 * 20) + Height_Header);
   myScreen.println("Erfolgreich");
 }
+
+void ManuelInitScreen(){
+  myScreen.background(0,0,0);  // clear the screen with black
+
+  myScreen.stroke(255,0,255);
+  myScreen.text("Welcome Manuell",2,0);
+
+  // increase font size for text in loop()
+  myScreen.setTextSize(4); 
+}
+
+void AutomaticInitScreen(){
+  myScreen.background(0,0,0);  // clear the screen with black
+
+  myScreen.stroke(255,0,255);
+  myScreen.text("Welcome Automatik",2,0);
+
+  // increase font size for text in loop()
+  myScreen.setTextSize(4); 
+}
+
+
 
 void drawMsg(char msg[], int x, int y, int textsize=2)
 {

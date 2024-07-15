@@ -8,7 +8,6 @@ enum SetupStates {
 char charBuf[8];
 long weight = 0;
 int newTaraweight;
-
 SetupStates currentSetupState = SetupStateMain;
 
 // State Machine for Modes
@@ -19,12 +18,15 @@ void StateMachine() {
       if (currentModus != lastModus) {
         lastModus = currentModus;
         Serial.println("enter Modus_Manuel");
+        ManuelInitScreen();
       }
+      ManuelStateMachine();
       break;
     case Modus_Automatic:
       if (currentModus != lastModus) {
         lastModus = currentModus;
         Serial.println("enter Modus_Automatic");
+        AutomaticInitScreen();
       }
       break;
     case Modus_Setup:
@@ -105,11 +107,16 @@ void SetupStateMachine() {
       Serial.print("Gewicht: ");
       Serial.println(weight);
       if (button_select.pressed() || button_stop.pressed()) {
-        Serial.println("Waage offset " + scale.get_offset());
+        Serial.print("Waage offset ");
+        Serial.println(scale.get_offset());
         currentSetupState = SetupStateMain;
         charBuf[0] = '\0';
         SetupInitScreen();
       }
       break;
   }
+}
+
+void ManuelStateMachine() {
+  ChangeAngle(ReadEncoder());
 }
