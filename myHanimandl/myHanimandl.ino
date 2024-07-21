@@ -73,6 +73,7 @@ int angle = 0;    // variable to store the servo position
 int minAngle = 0;    // variable to store the minimum servo position
 int maxAngle = 180;    // variable to store the maximum servo position
 int oldAngle = 0;    // variable to store the old servo position
+int oldDisplayedAngle = 0;    // variable to store the old servo position
 long oldPosition  = -999;
 long oldReading = 0;
 
@@ -84,6 +85,27 @@ TFT myScreen = TFT(TFT_CS, TFT_DC, TFT_RST);
 char printout[4];
 
 int counter = 0;
+
+enum SetupStates {
+  SetupStateMain,
+  SetupStateCalibrate1,
+  SetupStateCalibrate2,
+  SetupStateCalibrateFinal
+};
+
+enum ManuelStates {
+  ManuelStateStop,
+  ManuelStateStart
+};
+
+char charBuf[8];
+long weight = 0;
+long newWeight = -987;
+int newTaraweight;
+SetupStates currentSetupState = SetupStateMain;
+ManuelStates currentManuelState = ManuelStateStart;
+
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);

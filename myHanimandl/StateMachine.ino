@@ -1,14 +1,4 @@
-enum SetupStates {
-  SetupStateMain,
-  SetupStateCalibrate1,
-  SetupStateCalibrate2,
-  SetupStateCalibrateFinal
-};
 
-char charBuf[8];
-long weight = 0;
-int newTaraweight;
-SetupStates currentSetupState = SetupStateMain;
 
 // State Machine for Modes
 void StateMachine() {
@@ -18,6 +8,7 @@ void StateMachine() {
       if (currentModus != lastModus) {
         lastModus = currentModus;
         Serial.println("enter Modus_Manuel");
+        currentManuelState = ManuelStateStop;
         ManuelInitScreen();
       }
       ManuelStateMachine();
@@ -118,5 +109,64 @@ void SetupStateMachine() {
 }
 
 void ManuelStateMachine() {
-  ChangeAngle(ReadEncoder());
+  if (button_stop.pressed()) {
+    angle = minAngle;
+    currentManuelState = ManuelStateStop;
+
+    myScreen.stroke(0,0,0);
+    drawMsg("Live",myScreen.width()-SingleCharWidth * 2 * 6, myScreen.height()-(SingleCharHeight*2+Margin),2); 
+    myScreen.stroke(255,0,255);
+    drawMsg("Pause",myScreen.width()-SingleCharWidth * 2 * 6, myScreen.height()-(SingleCharHeight*2+Margin),2); 
+
+    myScreen.stroke(0,0,0);
+    sprintf(charBuf, "%d", oldDisplayedAngle);
+    drawMsg(charBuf,myScreen.width()-(SingleCharWidth*2*4),Margin + SingleCharHeight*3,2);
+    sprintf(charBuf, "%4d", weight);
+    drawMsg(charBuf, Margin, myScreen.height()-(SingleCharHeight*8), 4);
+
+
+
+  } else if (button_start.pressed()) {
+    currentManuelState = ManuelStateStart;
+    myScreen.stroke(0,0,0);
+    drawMsg("Pause",myScreen.width()-SingleCharWidth * 2 * 6, myScreen.height()-(SingleCharHeight*2+Margin),2); 
+    myScreen.stroke(255,0,255);
+    drawMsg("Live",myScreen.width()-SingleCharWidth * 2 * 6, myScreen.height()-(SingleCharHeight*2+Margin),2); 
+
+  } 
+  if (button_select.pressed()) {
+    scale.tare(5);
+  }
+
+  if (currentManuelState == ManuelStateStart) {
+
+    ChangeAngle(ReadEncoder());
+    if(angle != oldDisplayedAngle){
+      myScreen.stroke(0,0,0);
+
+      sprintf(charBuf, "%d", oldDisplayedAngle);
+      drawMsg(charBuf,myScreen.width()-(SingleCharWidth*2*4),Margin + SingleCharHeight*3,2);
+
+      oldDisplayedAngle = angle;
+      myScreen.stroke(17,222,88);
+
+      sprintf(charBuf, "%d", angle);
+      drawMsg(charBuf,myScreen.width()-(SingleCharWidth*2*4),Margin + SingleCharHeight*3,2);
+    }
+
+  
+    newWeight = ReadScale();
+    if (newWeight != -999 && newWeight != weight) {
+      sprintf(charBuf, "%4d", weight);
+      myScreen.stroke(0,0,0);
+      drawMsg(charBuf, Margin, myScreen.height()-(SingleCharHeight*8), 4);
+
+      weight = newWeight;
+      sprintf(charBuf, "%4d", weight);
+      myScreen.stroke(17,88,222);
+      drawMsg(charBuf, Margin, myScreen.height()-(SingleCharHeight*8), 4);
+    }
+  }
+
+
 }

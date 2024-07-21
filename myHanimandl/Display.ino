@@ -9,6 +9,12 @@ static int16_t SingleCharWidth = 6;
 
 SetupMenu currentMenu;
 
+void drawMsg(char msg[], int x, int y, int textsize=2)
+{
+  myScreen.setTextSize(textsize);
+  myScreen.text(msg, x, y );
+}
+
 void SetupInitScreen(){
 
   currentMenu = Setup_Calibrate;
@@ -61,10 +67,24 @@ void CalibScreenResult(){
 
 void ManuelInitScreen(){
   myScreen.background(0,0,0);  // clear the screen with black
+  myScreen.setTextSize(4);
+  drawMsg("Man.",Margin,Margin,3);
+  
+  //myScreen.setTextSize(1);
 
-  myScreen.stroke(255,0,255);
-  myScreen.text("Welcome Manuell",2,0);
+  drawMsg("min:",myScreen.width()-(SingleCharWidth*8),Margin,1);
+  sprintf(charBuf, "%d", minAngle);
+  drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin,1);
+  drawMsg("max:",myScreen.width()-(SingleCharWidth*8),Margin + SingleCharHeight,1);
+  sprintf(charBuf, "%d", maxAngle);
+  drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin + SingleCharHeight,1);
 
+  drawMsg("Ist:",myScreen.width()-(SingleCharWidth*2*8),Margin + SingleCharHeight*3,2);
+
+  drawMsg("g",SingleCharWidth * 4 * 4 - Margin, myScreen.height()-(SingleCharHeight*8),4);
+
+  drawMsg("Pause",myScreen.width()-SingleCharWidth * 2 * 6, myScreen.height()-(SingleCharHeight*2+Margin),2); 
+  
   // increase font size for text in loop()
   myScreen.setTextSize(4); 
 }
@@ -81,11 +101,7 @@ void AutomaticInitScreen(){
 
 
 
-void drawMsg(char msg[], int x, int y, int textsize=2)
-{
-  myScreen.setTextSize(textsize);
-  myScreen.text(msg, x, y );
-}
+
 
 void setCursor(SetupMenu item, color color)
 {
