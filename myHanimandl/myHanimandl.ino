@@ -221,10 +221,10 @@ void loop() {
   }
 
   if(oldAngle != angle) {
-    servo.write(angle);
+    servo.write(180-angle);
     oldAngle = angle;
     Serial.print("Servowrite: ");
-    Serial.println(angle);
+    Serial.println(180-angle);
   }
 
   delay (50);
