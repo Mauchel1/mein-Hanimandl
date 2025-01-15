@@ -68,7 +68,7 @@ Modus currentModus;
 Modus lastModus = -1;
 
 int taraweight = 500; //weight to calibrate the scale in g
-
+long scaleEmpty = -1;
 int angle = 0;    // variable to store the servo position
 int minAngle = 0;    // variable to store the minimum servo position
 int maxAngle = 180;    // variable to store the maximum servo position
@@ -76,6 +76,8 @@ int oldAngle = 0;    // variable to store the old servo position
 int oldDisplayedAngle = 0;    // variable to store the old servo position
 long oldPosition  = -999;
 long oldReading = 0;
+bool autoStart = false; //start next Glas automatic
+bool readyForNext = false;
 
 noDelay buzzertimer(1000, false);
 bool buzzerOn = false;
@@ -98,12 +100,19 @@ enum ManuelStates {
   ManuelStateStart
 };
 
+enum AutomaticStates {
+  AutomaticStateIdle,
+  AutomaticStateRunning,
+  AutomaticStateinProgress
+};
+
 char charBuf[8];
 long weight = 0;
 long newWeight = -987;
 int newTaraweight;
 SetupStates currentSetupState = SetupStateMain;
 ManuelStates currentManuelState = ManuelStateStart;
+AutomaticStates currentAutomaticStates = AutomaticStateIdle;
 
 
 void setup() {
@@ -180,6 +189,13 @@ void ChangeAngle(int change)
   if ((angle + change) > maxAngle){return;}
   if ((angle + change) < minAngle){return;}
   angle += change;
+}
+
+bool Regelung() 
+{
+  //TODO winkel regeln
+  ChangeAngle(minAngle); 
+  return false;
 }
 
 

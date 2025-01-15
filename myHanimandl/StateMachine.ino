@@ -19,6 +19,7 @@ void StateMachine() {
         Serial.println("enter Modus_Automatic");
         AutomaticInitScreen();
       }
+      AutomaticStateMachine();
       break;
     case Modus_Setup:
       if (currentModus != lastModus) {
@@ -80,6 +81,7 @@ void SetupStateMachine() {
         currentSetupState = SetupStateCalibrateFinal;
         //Waage voll tara
         scale.set_scale(scale.get_units(10) / taraweight);
+        scaleEmpty = scale.get_offset();
         charBuf[0] = '\0';
         CalibScreenResult();
         Serial.println("Scale Set");
@@ -154,7 +156,8 @@ void ManuelStateMachine() {
       drawMsg(charBuf,myScreen.width()-(SingleCharWidth*2*4),Margin + SingleCharHeight*3,2);
     }
 
-  
+    
+
     newWeight = ReadScale();
     if (newWeight != -999 && newWeight != weight) {
       sprintf(charBuf, "%4d", weight);
@@ -169,4 +172,65 @@ void ManuelStateMachine() {
   }
 
 
+}
+
+void AutomaticStateMachine() {
+/*
+  switch (currentAutomaticStates) {
+    case AutomaticStateIdle:
+      if (button_start.pressed()) {
+
+        if (Waage kalibriert?){
+          currentAutomaticStates = AutomaticStateinProgress;
+          startTimer();
+        } else {
+          Text anzeigen (nicht kalibriert)
+        }
+      //aUswahlmenü + quicktara
+      }
+    case AutomaticStateRunning:
+      if (button_stop.pressed()) {
+          currentAutomaticStates = AutomaticStateIdle;
+          ChangeAngle(minAngle);
+          UpdateProgressbar(0);
+          break;
+      }
+      if (button_start.pressed()) {
+        currentAutomaticStates = AutomaticStateinProgress;
+        startTimer();
+      }
+      readyForNext aktualisieren
+      if (autoStart && readyForNext) {
+        currentAutomaticStates = AutomaticStateinProgress;
+        startTimer();
+        readyForNext = false;
+      }
+
+    case AutomaticStateinProgress:
+      if (button_stop.pressed() || timer abgelaufen) {
+          currentAutomaticStates = AutomaticStateIdle;
+          ChangeAngle(minAngle);
+          UpdateProgressbar(0);
+          break;
+      }
+
+      if(tara not set) idle und break;
+
+      if (Regelung()) { // fertig abgefüllt
+        Serial.println("Glas fertig");
+        //TODO signal geben;
+        if (autoStart) {
+          currentAutomaticStates = AutomaticStateRunning;
+          Pausetimer starten?
+        } else {
+          currentAutomaticStates = AutomaticStateIdle;
+        }
+        
+        ChangeAngle(minAngle);
+
+      } 
+      UpdateProgressbar(128.0 * ((float)gewicht / (float)zielgewicht));
+     
+  }
+*/
 }

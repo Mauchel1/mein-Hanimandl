@@ -67,11 +67,8 @@ void CalibScreenResult(){
 
 void ManuelInitScreen(){
   myScreen.background(0,0,0);  // clear the screen with black
-  myScreen.setTextSize(4);
   drawMsg("Man.",Margin,Margin,3);
   
-  //myScreen.setTextSize(1);
-
   drawMsg("min:",myScreen.width()-(SingleCharWidth*8),Margin,1);
   sprintf(charBuf, "%d", minAngle);
   drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin,1);
@@ -93,7 +90,35 @@ void AutomaticInitScreen(){
   myScreen.background(0,0,0);  // clear the screen with black
 
   myScreen.stroke(255,0,255);
-  myScreen.text("Welcome Automatik",2,0);
+  drawMsg("Auto", Margin + SingleCharWidth*2,Margin,3);
+
+  drawMsg("min:",myScreen.width()-(SingleCharWidth*8),Margin,1);
+  sprintf(charBuf, "%d", minAngle);
+  drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin,1);
+  drawMsg("max:",myScreen.width()-(SingleCharWidth*8),Margin + SingleCharHeight,1);
+  sprintf(charBuf, "%d", maxAngle);
+  drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin + SingleCharHeight,1);
+  drawMsg("Ist:",myScreen.width()-(SingleCharWidth*8),Margin + SingleCharHeight*2,1);
+
+  drawMsg("Glastyp: ",Margin,SingleCharHeight*3+Margin,1);
+  drawMsg("TODO",SingleCharWidth*8*1 + Margin,SingleCharHeight*3+Margin,1);
+
+
+  drawMsg("Ziel",Margin,SingleCharHeight*5+Margin,2);
+  drawMsg("XXXX",myScreen.width()/2-SingleCharWidth*2*6,SingleCharHeight*7+Margin,2);
+  drawMsg("g",myScreen.width()/2-SingleCharWidth*2*2,SingleCharHeight*7+Margin,2);
+  drawMsg("+Xg",myScreen.width()/2-SingleCharWidth*8,SingleCharHeight*9+Margin,1);
+
+  drawMsg("Ist",myScreen.width()/2,SingleCharHeight*5+Margin,2);
+  drawMsg("XXXX",myScreen.width()-SingleCharWidth*3*5-Margin,SingleCharHeight*7+Margin,3);
+  drawMsg("g",myScreen.width()-SingleCharWidth*3-Margin,SingleCharHeight*7+Margin,3);
+
+  myScreen.drawRect(Margin, SingleCharHeight*12, myScreen.width()-Margin, SingleCharHeight*2, 0xF00F);
+
+  drawMsg("Autostart: ",Margin,myScreen.height()-SingleCharHeight-Margin,1);
+  drawMsg("on",SingleCharWidth*10 + Margin,myScreen.height()-SingleCharHeight-Margin,1);
+  //TODOdrawMsg("off",Margin,Margin,1);
+
 
   // increase font size for text in loop()
   myScreen.setTextSize(4); 
