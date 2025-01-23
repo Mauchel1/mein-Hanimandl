@@ -6,6 +6,7 @@
 #include <SPI.h>
 #include "NoDelay.h"
 #include <EEPROM.h>
+#include "EEPROMHandler.h"
 
 #define MAXIMALGEWICHT 1000  // Maximales Gewicht
 
@@ -68,15 +69,11 @@ Modus currentModus;
 Modus lastModus = -1;
 
 int taraweight = 500; //weight to calibrate the scale in g
-long scaleEmpty = -1;
 int angle = 0;    // variable to store the servo position
-int minAngle = 0;    // variable to store the minimum servo position
-int maxAngle = 180;    // variable to store the maximum servo position
 int oldAngle = 0;    // variable to store the old servo position
 int oldDisplayedAngle = 0;    // variable to store the old servo position
 long oldPosition  = -999;
 long oldReading = 0;
-bool autoStart = false; //start next Glas automatic
 bool readyForNext = false;
 
 noDelay buzzertimer(1000, false);
@@ -86,7 +83,7 @@ TFT myScreen = TFT(TFT_CS, TFT_DC, TFT_RST);
 
 char printout[4];
 
-int counter = 0;
+int counterThisTime = 0;
 
 enum SetupStates {
   SetupStateMain,
@@ -114,6 +111,14 @@ SetupStates currentSetupState = SetupStateMain;
 ManuelStates currentManuelState = ManuelStateStart;
 AutomaticStates currentAutomaticStates = AutomaticStateIdle;
 
+//!!!ACHTUNG NICHT REIHENFOLGE ÄNDERN - NUR NACH HINTEN ERGÄNZEN!!!
+ConfigEntry_INT minAngle = ConfigEntry_INT(0,0,0); // variable to store the minimum servo position
+ConfigEntry_INT maxAngle = ConfigEntry_INT(180,1,minAngle.getAddress() + sizeof(minAngle.getValue())); // variable to store the maximum servo position
+ConfigEntry_INT counterAllTime = ConfigEntry_INT(0,2,maxAngle.getAddress() + sizeof(maxAngle.getValue()));
+ConfigEntry_BOOL autoStart = ConfigEntry_BOOL(false,3,counterAllTime.getAddress() + sizeof(counterAllTime.getValue())); //start next Glas automatic
+ConfigEntry_FLOAT factor = ConfigEntry_FLOAT(0,4,autoStart.getAddress() + sizeof(autoStart.getValue())); //internal factor for calibrating scale
+ConfigEntry_LONG scaleEmpty = ConfigEntry_LONG(-1,5,factor.getAddress() + sizeof(factor.getValue()));  
+
 
 void setup() {
   // put your setup code here, to run once:
@@ -128,9 +133,22 @@ void setup() {
 
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
 
-  servo.write(minAngle);
+  //!! AUSKOMMENTIERT LASSEN!! NUR ANFASSEN WENN SICH EEPROMSTRUKTUR ÄNDERT
+  //minAngle.saveValueToEEPROM();
+  //maxAngle.saveValueToEEPROM(); 
+  //counterAllTime.saveValueToEEPROM(); 
+  //autoStart.saveValueToEEPROM(); 
+  //factor.saveValueToEEPROM(); 
+  //scaleEmpty.saveValueToEEPROM();
+
+  loadInitialEEPROMValues();
+
+  scale.set_scale(factor.getValue());
+  scale.set_offset(long(scaleEmpty.getValue()));
+
+  servo.write(minAngle.getValue());
   servo.attach(SERVO_PIN);//,1000,2000);
-  angle = minAngle;
+  angle = minAngle.getValue();
 
   myScreen.begin();
 
@@ -186,18 +204,39 @@ long ReadEncoder() //gives the change of the encoder
 
 void ChangeAngle(int change)
 {
-  if ((angle + change) > maxAngle){return;}
-  if ((angle + change) < minAngle){return;}
+  if ((angle + change) > maxAngle.getValue()){return;}
+  if ((angle + change) < minAngle.getValue()){return;}
   angle += change;
 }
 
 bool Regelung() 
 {
   //TODO winkel regeln
-  ChangeAngle(minAngle); 
+  ChangeAngle(minAngle.getValue()); 
   return false;
 }
 
+void loadInitialEEPROMValues()
+{
+  minAngle.loadValueFromEEPROM();
+  Serial.print("minAngle: ");
+  Serial.println(minAngle.getValue());
+  maxAngle.loadValueFromEEPROM(); 
+  Serial.print("maxAngle: ");
+  Serial.println(maxAngle.getValue());
+  counterAllTime.loadValueFromEEPROM(); 
+  Serial.print("counterAllTime: ");
+  Serial.println(counterAllTime.getValue());
+  autoStart.loadValueFromEEPROM(); 
+  Serial.print("autoStart: ");
+  Serial.println(autoStart.getValue());
+  factor.loadValueFromEEPROM(); 
+  Serial.print("factor: ");
+  Serial.println(factor.getValue());
+  scaleEmpty.loadValueFromEEPROM();
+  Serial.print("scaleEmpty: ");
+  Serial.println(scaleEmpty.getValue());
+}
 
 void loop() {
 

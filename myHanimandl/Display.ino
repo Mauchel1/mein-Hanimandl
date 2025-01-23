@@ -70,10 +70,10 @@ void ManuelInitScreen(){
   drawMsg("Man.",Margin,Margin,3);
   
   drawMsg("min:",myScreen.width()-(SingleCharWidth*8),Margin,1);
-  sprintf(charBuf, "%d", minAngle);
+  sprintf(charBuf, "%d", minAngle.getValue());
   drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin,1);
   drawMsg("max:",myScreen.width()-(SingleCharWidth*8),Margin + SingleCharHeight,1);
-  sprintf(charBuf, "%d", maxAngle);
+  sprintf(charBuf, "%d", maxAngle.getValue());
   drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin + SingleCharHeight,1);
 
   drawMsg("Ist:",myScreen.width()-(SingleCharWidth*2*8),Margin + SingleCharHeight*3,2);
@@ -93,10 +93,10 @@ void AutomaticInitScreen(){
   drawMsg("Auto", Margin + SingleCharWidth*2,Margin,3);
 
   drawMsg("min:",myScreen.width()-(SingleCharWidth*8),Margin,1);
-  sprintf(charBuf, "%d", minAngle);
+  sprintf(charBuf, "%d", minAngle.getValue());
   drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin,1);
   drawMsg("max:",myScreen.width()-(SingleCharWidth*8),Margin + SingleCharHeight,1);
-  sprintf(charBuf, "%d", maxAngle);
+  sprintf(charBuf, "%d", maxAngle.getValue());
   drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin + SingleCharHeight,1);
   drawMsg("Ist:",myScreen.width()-(SingleCharWidth*8),Margin + SingleCharHeight*2,1);
 

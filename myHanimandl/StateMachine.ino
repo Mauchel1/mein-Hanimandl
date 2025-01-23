@@ -81,7 +81,10 @@ void SetupStateMachine() {
         currentSetupState = SetupStateCalibrateFinal;
         //Waage voll tara
         scale.set_scale(scale.get_units(10) / taraweight);
-        scaleEmpty = scale.get_offset();
+        scaleEmpty.setValue(scale.get_offset()); 
+        scaleEmpty.saveValueToEEPROM();
+        factor.setValue(scale.get_scale());
+        factor.saveValueToEEPROM();
         charBuf[0] = '\0';
         CalibScreenResult();
         Serial.println("Scale Set");
@@ -112,7 +115,7 @@ void SetupStateMachine() {
 
 void ManuelStateMachine() {
   if (button_stop.pressed()) {
-    angle = minAngle;
+    angle = minAngle.getValue();
     currentManuelState = ManuelStateStop;
 
     myScreen.stroke(0,0,0);
