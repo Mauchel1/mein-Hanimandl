@@ -181,24 +181,19 @@ void ManuelStateMachine() {
     currentManuelState = ManuelStateStop;
 
     myScreen.stroke(0,0,0);
-    drawMsg("Live",myScreen.width()-SingleCharWidth * 2 * 6, myScreen.height()-(SingleCharHeight*2+Margin),2); 
-    myScreen.stroke(255,0,255);
-    drawMsg("Pause",myScreen.width()-SingleCharWidth * 2 * 6, myScreen.height()-(SingleCharHeight*2+Margin),2); 
-
-    myScreen.stroke(0,0,0);
     sprintf(charBuf, "%d", oldDisplayedAngle);
     drawMsg(charBuf,myScreen.width()-(SingleCharWidth*2*4),Margin + SingleCharHeight*3,2);
     sprintf(charBuf, "%4d", weight);
-    drawMsg(charBuf, Margin, myScreen.height()-(SingleCharHeight*8), 4);
+    drawMsg(charBuf, Margin, myScreen.height()-(SingleCharHeight*8), 4);    
 
 
+    myScreen.stroke(255,0,255);
+    drawMsg("PAUSE",SingleCharWidth * 2 * 1, myScreen.height()-(SingleCharHeight*2*3+Margin),2); 
 
   } else if (button_start.pressed()) {
     currentManuelState = ManuelStateStart;
     myScreen.stroke(0,0,0);
-    drawMsg("Pause",myScreen.width()-SingleCharWidth * 2 * 6, myScreen.height()-(SingleCharHeight*2+Margin),2); 
-    myScreen.stroke(255,0,255);
-    drawMsg("Live",myScreen.width()-SingleCharWidth * 2 * 6, myScreen.height()-(SingleCharHeight*2+Margin),2); 
+    drawMsg("PAUSE",SingleCharWidth * 2 * 1, myScreen.height()-(SingleCharHeight*2*3+Margin),2); 
 
   } 
   if (button_select.pressed()) {

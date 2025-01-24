@@ -130,8 +130,12 @@ void ManuelInitScreen(){
 
   drawMsg("g",SingleCharWidth * 4 * 4 - Margin, myScreen.height()-(SingleCharHeight*8),4);
 
-  drawMsg("Pause",myScreen.width()-SingleCharWidth * 2 * 6, myScreen.height()-(SingleCharHeight*2+Margin),2); 
-  
+  myScreen.stroke(255,0,255);
+  drawMsg("PAUSE",SingleCharWidth * 2 * 1, myScreen.height()-(SingleCharHeight*2*3+Margin),2); 
+  myScreen.stroke(255,255,255);
+  myScreen.setTextSize(2); 
+  myScreen.text("start  stop", Margin_Item, (4 * 20) + Height_Header ); 
+
   // increase font size for text in loop()
   myScreen.setTextSize(4); 
 }
