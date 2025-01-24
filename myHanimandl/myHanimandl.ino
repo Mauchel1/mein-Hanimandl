@@ -26,8 +26,8 @@ const int ENCODER_PIN_SW = 4;
 const int SERVO_PIN = 5;
 const int BUZZER_PIN = 6;
 
-#define BUTTON_START_PIN A0 //14
-#define BUTTON_STOP_PIN A1 //15
+#define BUTTON_START_PIN A1 //15
+#define BUTTON_STOP_PIN A0 //14
 #define SWITCH_POS1_PIN A2 //16
 #define SWITCH_POS2_PIN A3 //17
 
@@ -89,7 +89,10 @@ enum SetupStates {
   SetupStateMain,
   SetupStateCalibrate1,
   SetupStateCalibrate2,
-  SetupStateCalibrateFinal
+  SetupStateCalibrateFinal,
+  SetupStateServoStart,
+  SetupStateServoChoose, 
+  SetupStateServoChange
 };
 
 enum ManuelStates {
@@ -202,10 +205,15 @@ long ReadEncoder() //gives the change of the encoder
   return 0;
 }
 
-void ChangeAngle(int change)
+void ChangeAngle(int change, bool goOverBoundrys = false)
 {
-  if ((angle + change) > maxAngle.getValue()){return;}
-  if ((angle + change) < minAngle.getValue()){return;}
+  if(goOverBoundrys){
+    if ((angle + change) > 180){return;}
+    if ((angle + change) < 0){return;}
+  }else{
+    if ((angle + change) > maxAngle.getValue()){return;}
+    if ((angle + change) < minAngle.getValue()){return;}
+  }
   angle += change;
 }
 

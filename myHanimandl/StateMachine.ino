@@ -44,6 +44,8 @@ void SetupStateMachine() {
             currentSetupState = SetupStateCalibrate1;
             break;
           case Setup_Servo:
+            ServoScreenStart();
+            currentSetupState = SetupStateServoStart;
             break;
           case Setup_Glas:
             break;
@@ -108,6 +110,63 @@ void SetupStateMachine() {
         currentSetupState = SetupStateMain;
         charBuf[0] = '\0';
         SetupInitScreen();
+      }
+      break;
+    case SetupStateServoStart:
+      EncoderSelectMenuChanged(ReadEncoder(), currentMenu, 0, 1);
+      if (button_select.pressed()) 
+      {
+        ServoScreenChoose();
+        currentSetupState = SetupStateServoChoose;
+      } else if (button_stop.pressed()) 
+      {
+        angle = minAngle.getValue();
+        currentSetupState = SetupStateMain;
+        SetupInitScreen();
+      }
+
+      break;
+    case SetupStateServoChoose:
+      if (button_start.pressed()) 
+      {
+        ReadEncoder(); //clear Encoder 
+        ServoScreenChange();
+        currentSetupState = SetupStateServoChange;
+      }
+       else if (button_stop.pressed()) 
+      {
+        ServoScreenStart();
+        currentSetupState = SetupStateServoStart;
+      }
+      break;
+    case SetupStateServoChange:
+
+      ChangeAngle(ReadEncoder(), true);
+      if(angle != oldDisplayedAngle){
+        myScreen.fillRect(Margin_Item, (3 * 20) + Height_Header, SingleCharWidth * 2 * 3, SingleCharHeight * 2, 0x0000);
+        myScreen.stroke(255,0,255);
+        sprintf(charBuf, "%d", angle);
+        drawMsg(charBuf, Margin_Item, (3 * 20) + Height_Header, 2);
+        oldDisplayedAngle = angle;
+        myScreen.stroke(0,0,0);
+      }
+      if (button_start.pressed()) 
+      {
+        if (currentMenu == 0){
+            minAngle.setValue(angle);
+            minAngle.saveValueToEEPROM();
+        }
+        else {
+            maxAngle.setValue(angle);
+            maxAngle.saveValueToEEPROM();
+        }
+        ServoScreenStart();
+        currentSetupState = SetupStateServoStart;
+      }
+      else if (button_stop.pressed()) 
+      {
+        ServoScreenStart();
+        currentSetupState = SetupStateServoStart;
       }
       break;
   }

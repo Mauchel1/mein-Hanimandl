@@ -52,7 +52,7 @@ void CalibScreen1(){
 }
 
 void CalibScreen2(){
-  myScreen.fillRect(0, Height_Header, myScreen.width(), 60, 0x0000);
+  myScreen.fillRect(0, Height_Header, myScreen.width(), 60, 0x0000); //delete all but Header
 
   myScreen.text("Waage mit", Margin_Item, (0 * 20) + Height_Header );
   myScreen.text(" beladen", Margin_Item, (2 * 20) + Height_Header );
@@ -63,6 +63,56 @@ void CalibScreenResult(){
 
   myScreen.setCursor(Margin_Item, (0 * 20) + Height_Header);
   myScreen.println("Erfolgreich");
+}
+
+void ServoScreenStart(){
+  currentMenu = 0;
+  myScreen.background(0,0,0);  // clear the screen with black
+  myScreen.stroke(255,255,255);
+  myScreen.setTextSize(3);
+
+  myScreen.text("SERVO",Width_Header,Margin);
+
+  myScreen.setTextSize(2);
+
+  myScreen.text("Minimal", Margin_Item, (0 * 20) + Height_Header );
+  sprintf(charBuf, "%d", minAngle.getValue());
+  drawMsg(charBuf, Margin_Item + SingleCharWidth*8*2, (0 * 20) + Height_Header, 2);
+  myScreen.text("Maximal", Margin_Item, (1 * 20) + Height_Header );
+  sprintf(charBuf, "%d", maxAngle.getValue());
+  drawMsg(charBuf, Margin_Item + SingleCharWidth*8*2, (1 * 20) + Height_Header, 2);
+
+  myScreen.text("       back", Margin_Item, (4 * 20) + Height_Header ); 
+
+  setCursor(0, 0xFFFF);
+}
+
+void ServoScreenChoose(){
+  
+  myScreen.fillRect(0, Height_Header, myScreen.width(), 60, 0x0000); //delete all but Header
+
+  if (currentMenu == 0)
+  {
+    myScreen.text("Minimal", Margin_Item, (0 * 20) + Height_Header ); 
+    sprintf(charBuf, "%d", minAngle.getValue());
+    drawMsg(charBuf, Margin_Item + SingleCharWidth*8*2, (0 * 20) + Height_Header, 2);
+  }
+  else
+  {
+    myScreen.text("Maximal", Margin_Item, (0 * 20) + Height_Header ); 
+    sprintf(charBuf, "%d", maxAngle.getValue());
+    drawMsg(charBuf, Margin_Item + SingleCharWidth*8*2, (0 * 20) + Height_Header, 2);
+  }
+  myScreen.text("live Angle:", Margin_Item, (2 * 20) + Height_Header ); 
+  sprintf(charBuf, "%d", angle);
+  drawMsg(charBuf, Margin_Item, (3 * 20) + Height_Header, 2);
+  myScreen.text("change back", Margin_Item, (4 * 20) + Height_Header ); 
+
+}
+
+void ServoScreenChange(){
+  myScreen.fillRect(0, (4 * 20) + Height_Header, myScreen.width(), 60, 0x0000); //delete all but Header
+  myScreen.text("save   back", Margin_Item, (4 * 20) + Height_Header ); 
 }
 
 void ManuelInitScreen(){
@@ -123,9 +173,6 @@ void AutomaticInitScreen(){
   // increase font size for text in loop()
   myScreen.setTextSize(4); 
 }
-
-
-
 
 
 void setCursor(SetupMenu item, color color)
