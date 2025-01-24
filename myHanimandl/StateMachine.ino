@@ -8,6 +8,7 @@ void StateMachine() {
       if (currentModus != lastModus) {
         lastModus = currentModus;
         Serial.println("enter Modus_Manuel");
+        angle = minAngle.getValue();
         currentManuelState = ManuelStateStop;
         ManuelInitScreen();
       }
@@ -16,6 +17,7 @@ void StateMachine() {
     case Modus_Automatic:
       if (currentModus != lastModus) {
         lastModus = currentModus;
+        angle = minAngle.getValue();
         Serial.println("enter Modus_Automatic");
         AutomaticInitScreen();
       }
@@ -25,6 +27,7 @@ void StateMachine() {
       if (currentModus != lastModus) {
         lastModus = currentModus;
         Serial.println("enter Modus_Setup");
+        angle = minAngle.getValue();
         currentSetupState = SetupStateMain;
         SetupInitScreen();
       }
