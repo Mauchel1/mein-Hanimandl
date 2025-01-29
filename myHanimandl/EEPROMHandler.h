@@ -13,7 +13,7 @@ int getAddress(){return eeAddress;}
   protected:
 
     int eeAddress;
-    int id; // stores the unique id from each Configitem, beginning at 1
+    int id; // stores the unique id from each Configitem, beginning at 0
 
 };
 
@@ -91,4 +91,38 @@ void loadValueFromEEPROM(){EEPROM.get(eeAddress, value);}
 
   private:
     float value;
+};
+
+class ConfigEntry_GLASS : public ConfigEntry
+{
+public:
+    // Konstruktor
+    ConfigEntry_GLASS(int fillweight, int emptyweight, int id, int eeAddress) :  ConfigEntry(id, eeAddress)
+    {
+      this->fillweight = fillweight;
+      this->emptyweight = emptyweight;
+    }
+
+    //Standardkonstruktor
+    ConfigEntry_GLASS() : ConfigEntry(0, 0), fillweight(0), emptyweight(0) {}
+
+  void setFillweight(int fillweight){this->fillweight = fillweight;}
+  void setEmptyweight(int emptyweight){this->emptyweight = emptyweight;}
+  int getFillweight(){return fillweight;}
+  int getEmptyweight(){return emptyweight;}
+
+  void saveFillweightToEEPROM(){EEPROM.put(eeAddress, fillweight);}
+  void loadFillweightFromEEPROM(){EEPROM.get(eeAddress, fillweight);}
+
+  void saveEmptyweightToEEPROM(){EEPROM.put(eeAddress + sizeof(fillweight), emptyweight);}
+  void loadEmptyweightFromEEPROM(){EEPROM.get(eeAddress + sizeof(fillweight), emptyweight);}
+
+  void loadValuesFromEEPROM(){
+    loadFillweightFromEEPROM();
+    loadEmptyweightFromEEPROM();
+  }
+
+  private:
+    int fillweight;
+    int emptyweight;
 };

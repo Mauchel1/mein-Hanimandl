@@ -51,6 +51,8 @@ void SetupStateMachine() {
             currentSetupState = SetupStateServoStart;
             break;
           case Setup_Glas:
+            GlassInitScreen();
+            currentSetupState = SetupStateGlasInit;
             break;
           case Setup_Automatic:
             break;
@@ -172,6 +174,142 @@ void SetupStateMachine() {
         currentSetupState = SetupStateServoStart;
       }
       break;
+    case SetupStateGlasInit:
+      EncoderSelectMenuChanged(ReadEncoder(), currentMenu, 0, 3);
+      if (button_select.pressed() ) {
+        currentSetupState = SetupStateGlasSelected;
+        currentGlass = currentMenu;
+        Serial.println("change to SetupStateGlasSelected");
+        GlassSelectedScreen(currentGlass);
+        ReadEncoder();
+        currentMenu = 1;
+      } else if (button_stop.pressed()) {
+        currentSetupState = SetupStateMain;
+        Serial.println("change to SetupStateMain");
+        SetupInitScreen();
+      }
+      break;
+    case SetupStateGlasSelected:
+      EncoderSelectMenuChanged(ReadEncoder(), currentMenu, 1, 2);
+      if (button_stop.pressed()) {
+        currentSetupState = SetupStateGlasInit;
+        GlassInitScreen();
+        Serial.println("change to SetupStateGlasInit");
+      } else if (button_start.pressed()) 
+      {
+        if (currentMenu == 1) 
+        {
+          setupHelperValue = glasses[currentGlass].getFillweight();
+          oldSetupHelperValue = 0;
+          myScreen.stroke(0,0,0);
+          sprintf(charBuf, "      %4d", setupHelperValue); 
+          drawMsg(charBuf, Margin_Item  , (1 * 20) + Height_Header, 2);
+          currentSetupState = SetupStateGlasFillChange;
+          myScreen.text("edit", Margin_Item, (4 * 20) + Height_Header ); 
+          myScreen.stroke(255,255,255);
+          myScreen.text("save", Margin_Item, (4 * 20) + Height_Header ); 
+        }
+        else if (currentMenu == 2)
+        {
+          setupHelperValue = glasses[currentGlass].getEmptyweight();
+          myScreen.stroke(0,0,0);
+          sprintf(charBuf, "      %4d", setupHelperValue); 
+          setupHelperValue = 0;
+          oldSetupHelperValue = 0;
+          drawMsg(charBuf, Margin_Item  , (2 * 20) + Height_Header, 2);
+          myScreen.text("edit", Margin_Item, (4 * 20) + Height_Header ); 
+          myScreen.stroke(255,255,255);
+          myScreen.text("save", Margin_Item, (4 * 20) + Height_Header ); 
+          currentSetupState = SetupStateGlasEmptyChange;
+        }
+      }
+      break;
+    case SetupStateGlasFillChange:
+      setupHelperValue += ReadEncoder();
+      if (setupHelperValue != oldSetupHelperValue) {
+        myScreen.stroke(0,0,0);
+        sprintf(charBuf, "      %4d", oldSetupHelperValue); 
+        drawMsg(charBuf, Margin_Item  , (1 * 20) + Height_Header, 2);
+        myScreen.stroke(255,0,255);
+        sprintf(charBuf, "      %4d", setupHelperValue); 
+        drawMsg(charBuf, Margin_Item  , (1 * 20) + Height_Header, 2);
+        oldSetupHelperValue = setupHelperValue;
+        myScreen.stroke(255,255,255);
+      }
+      if (button_stop.pressed()) {
+        currentSetupState = SetupStateGlasSelected;
+        GlassSelectedScreen(currentGlass);
+        Serial.println("change to SetupStateGlasSelected");
+      } else if (button_start.pressed()) {
+        glasses[currentGlass].setFillweight(setupHelperValue);
+        Serial.println("SAVE"); //TODO
+        //glasses[currentGlass].saveFillweightToEEPROM();
+        currentSetupState = SetupStateGlasSelected;
+        GlassSelectedScreen(currentGlass);
+        Serial.println("change to SetupStateGlasSelected");
+      }
+      break;
+    case SetupStateGlasEmptyChange:
+      newWeight = ReadScale();
+      delay(100);
+      if (button_stop.pressed()) {
+        currentSetupState = SetupStateGlasSelected;
+        GlassSelectedScreen(currentGlass);
+        Serial.println("change to SetupStateGlasSelected");
+      }
+      if (newWeight != -999) { //unkalibriert
+        //altes kalibrieren löschen
+        if (oldSetupHelperValue == 1){
+          myScreen.stroke(0,0,0);
+          myScreen.text("KALIBRIEREN!", Margin_Item, (3 * 20) + Height_Header ); 
+          myScreen.stroke(255,255,255);
+          oldSetupHelperValue = 0;
+        }
+        if(button_select.pressed() && abs(newWeight) < 20) { // nur bei kleinem drift tara, sonst neu kalibrieren!
+          scale.tare();
+          Serial.println("TARA");
+        } 
+        if (abs(newWeight) > 20 ) {
+          if (setupHelperValue == 0){
+            myScreen.stroke(255,0,255);
+            myScreen.text("LEER > TARA", Margin_Item, (3 * 20) + Height_Header ); 
+            myScreen.stroke(255,255,255);
+            Serial.println("LEEREN");
+            setupHelperValue = 1;
+          }
+        } else if (setupHelperValue == 1){
+          //altes leeren löschen
+          myScreen.stroke(0,0,0);
+          myScreen.text("LEER > TARA", Margin_Item, (3 * 20) + Height_Header ); 
+          myScreen.stroke(255,255,255);
+          setupHelperValue = 0;
+        }
+        if (newWeight != weight) { //neues Gewicht schreiben
+          sprintf(charBuf, "      %4d", weight);
+          myScreen.stroke(0,0,0);
+          drawMsg(charBuf, Margin_Item  , (2 * 20) + Height_Header, 2);
+          weight = newWeight;
+          sprintf(charBuf, "      %4d", weight);
+          myScreen.stroke(255,0,255);
+          drawMsg(charBuf, Margin_Item  , (2 * 20) + Height_Header, 2);
+          myScreen.stroke(255,255,255);
+        }
+        if (button_start.pressed()) {
+          glasses[currentGlass].setEmptyweight(weight);
+          //glasses[currentGlass].saveEmptyweightToEEPROM();
+          Serial.println("Saved Emptyweight");
+          currentSetupState = SetupStateGlasSelected;
+          GlassSelectedScreen(currentGlass);
+          Serial.println("change to SetupStateGlasSelected");
+        }
+      } else {
+        myScreen.stroke(255,0,255);
+        myScreen.text("KALIBRIEREN!", Margin_Item, (3 * 20) + Height_Header ); 
+        myScreen.stroke(255,255,255);
+        oldSetupHelperValue = 1;
+      }
+      break;
+
   }
 }
 
@@ -260,6 +398,7 @@ void AutomaticStateMachine() {
         startTimer();
       }
       readyForNext aktualisieren
+      evtl bei leerer Waage einmal tara gegen drift?
       if (autoStart && readyForNext) {
         currentAutomaticStates = AutomaticStateinProgress;
         startTimer();

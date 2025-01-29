@@ -115,6 +115,46 @@ void ServoScreenChange(){
   myScreen.text("save   back", Margin_Item, (4 * 20) + Height_Header ); 
 }
 
+void GlassInitScreen(){
+
+  currentMenu = 0;
+  myScreen.background(0,0,0);  // clear the screen with black
+  myScreen.stroke(255,255,255);
+  myScreen.setTextSize(3);
+
+  myScreen.text("GLAS",Width_Header,Margin);
+
+  myScreen.setTextSize(2);
+
+  for (int i = 0; i < 4; i++){
+    sprintf(charBuf, "Glas %d", i + 1);
+    myScreen.text(charBuf, Margin_Item, (i * 20) + Height_Header );
+    sprintf(charBuf, "%d", glasses[i].getFillweight());
+    drawMsg(charBuf, Margin_Item + SingleCharWidth*7*2, (i * 20) + Height_Header, 2);
+  }
+  
+  myScreen.text("       back", Margin_Item, (4 * 20) + Height_Header ); 
+
+  setCursor(currentMenu, 0xFFFF);
+}
+
+void GlassSelectedScreen(int i){
+  myScreen.fillRect(0, Height_Header, myScreen.width(), 100, 0x0000); //delete all but Header
+
+  sprintf(charBuf, "   Glas %d", i + 1);
+  myScreen.text(charBuf, Margin_Item, (0 * 20) + Height_Header );
+  drawMsg("Fill:     g", Margin_Item, (1 * 20) + Height_Header, 2);
+  sprintf(charBuf, "      %4d", glasses[i].getFillweight()); 
+  drawMsg(charBuf, Margin_Item  , (1 * 20) + Height_Header, 2);
+  drawMsg("Leer:     g", Margin_Item, (2 * 20) + Height_Header, 2);
+  sprintf(charBuf, "      %4d", glasses[i].getEmptyweight());
+  drawMsg(charBuf, Margin_Item , (2 * 20) + Height_Header, 2);
+
+  myScreen.text("edit   back", Margin_Item, (4 * 20) + Height_Header ); 
+  setCursor(1, 0xFFFF);
+
+}
+
 void ManuelInitScreen(){
   myScreen.background(0,0,0);  // clear the screen with black
   drawMsg("Man.",Margin,Margin,3);
@@ -190,21 +230,22 @@ void changeCurrentMenu (SetupMenu newMenu)
   setCursor(currentMenu, 0x0000);
   currentMenu = newMenu;
   setCursor(currentMenu, 0xFFFF);
-  Serial.println("NewMenu: " + currentMenu);
+  Serial.print("NewMenu: " );
+  Serial.println(currentMenu);
 }
 
 void EncoderSelectMenuChanged(int change, int menuItem, int min, int max)
 {
   if (change == 0) return;
   if (change > 0) {
-    if(menuItem == max)
+    if(menuItem >= max)
     {
       changeCurrentMenu(min);
     } else {
       changeCurrentMenu(menuItem+1);
     }
   } else {
-    if(menuItem == min)
+    if(menuItem <= min)
     {
       changeCurrentMenu(max);
     } else {

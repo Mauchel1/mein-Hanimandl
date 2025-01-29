@@ -92,7 +92,11 @@ enum SetupStates {
   SetupStateCalibrateFinal,
   SetupStateServoStart,
   SetupStateServoChoose, 
-  SetupStateServoChange
+  SetupStateServoChange,
+  SetupStateGlasInit,
+  SetupStateGlasSelected,
+  SetupStateGlasFillChange,
+  SetupStateGlasEmptyChange
 };
 
 enum ManuelStates {
@@ -106,13 +110,18 @@ enum AutomaticStates {
   AutomaticStateinProgress
 };
 
-char charBuf[8];
+char charBuf[16];
 long weight = 0;
-long newWeight = -987;
+long newWeight = -999;
 int newTaraweight;
+int setupHelperValue;
+int oldSetupHelperValue;
 SetupStates currentSetupState = SetupStateMain;
 ManuelStates currentManuelState = ManuelStateStart;
 AutomaticStates currentAutomaticStates = AutomaticStateIdle;
+
+ConfigEntry_GLASS glasses[4];
+int currentGlass = 0;
 
 //!!!ACHTUNG NICHT REIHENFOLGE ÄNDERN - NUR NACH HINTEN ERGÄNZEN!!!
 ConfigEntry_INT minAngle = ConfigEntry_INT(0,0,0); // variable to store the minimum servo position
@@ -121,6 +130,7 @@ ConfigEntry_INT counterAllTime = ConfigEntry_INT(0,2,maxAngle.getAddress() + siz
 ConfigEntry_BOOL autoStart = ConfigEntry_BOOL(false,3,counterAllTime.getAddress() + sizeof(counterAllTime.getValue())); //start next Glas automatic
 ConfigEntry_FLOAT factor = ConfigEntry_FLOAT(0,4,autoStart.getAddress() + sizeof(autoStart.getValue())); //internal factor for calibrating scale
 ConfigEntry_LONG scaleEmpty = ConfigEntry_LONG(-1,5,factor.getAddress() + sizeof(factor.getValue()));  
+// achtung, ab hier je 2 werte gewpeichert, also 2 Adressen weiter!
 
 
 void setup() {
@@ -143,6 +153,17 @@ void setup() {
   //autoStart.saveValueToEEPROM(); 
   //factor.saveValueToEEPROM(); 
   //scaleEmpty.saveValueToEEPROM();
+
+  glasses[0] = ConfigEntry_GLASS(250, 20, 6, scaleEmpty.getAddress() + sizeof(scaleEmpty.getValue()));
+  glasses[1] = ConfigEntry_GLASS(500, 20, 7, glasses[0].getAddress() + sizeof(glasses[0].getEmptyweight()) + sizeof(glasses[0].getFillweight()));
+  glasses[2] = ConfigEntry_GLASS(250, 20, 8, glasses[1].getAddress() + sizeof(glasses[1].getEmptyweight()) + sizeof(glasses[1].getFillweight()));
+  glasses[3] = ConfigEntry_GLASS(250, 20, 9, glasses[2].getAddress() + sizeof(glasses[2].getEmptyweight()) + sizeof(glasses[2].getFillweight()));
+
+  //!! AUSKOMMENTIERT LASSEN!! NUR ANFASSEN WENN SICH EEPROMSTRUKTUR ÄNDERT
+  //for (int i = 0; i < 4; i ++){
+  //  glasses[i].saveEmptyweightToEEPROM();
+  //  glasses[i].saveFillweightToEEPROM();
+  //}
 
   loadInitialEEPROMValues();
 
@@ -244,6 +265,16 @@ void loadInitialEEPROMValues()
   scaleEmpty.loadValueFromEEPROM();
   Serial.print("scaleEmpty: ");
   Serial.println(scaleEmpty.getValue());
+  for (int i = 0; i < 4; i ++){
+    glasses[i].loadValuesFromEEPROM();
+    Serial.print("Glas ");
+    Serial.print(i+1);
+    Serial.print(" Fill/Empty: ");
+    Serial.print(glasses[i].getFillweight());
+    Serial.print("g / ");
+    Serial.print(glasses[i].getEmptyweight());
+    Serial.println("g");
+  }
 }
 
 void loop() {
