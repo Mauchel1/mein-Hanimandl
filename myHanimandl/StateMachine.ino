@@ -1,5 +1,3 @@
-
-
 // State Machine for Modes
 void StateMachine() {
 
@@ -19,6 +17,8 @@ void StateMachine() {
         lastModus = currentModus;
         angle = minAngle.getValue();
         Serial.println("enter Modus_Automatic");
+        currentAutomaticStates = AutomaticStateIdle;
+        currentAutomaticParam = Autoparam_Nothing;
         AutomaticInitScreen();
       }
       AutomaticStateMachine();
@@ -178,9 +178,9 @@ void SetupStateMachine() {
       EncoderSelectMenuChanged(ReadEncoder(), currentMenu, 0, 3);
       if (button_select.pressed() ) {
         currentSetupState = SetupStateGlasSelected;
-        currentGlass = currentMenu;
+        currentGlass.setValue(currentMenu);
         Serial.println("change to SetupStateGlasSelected");
-        GlassSelectedScreen(currentGlass);
+        GlassSelectedScreen(currentGlass.getValue());
         ReadEncoder();
         currentMenu = 1;
       } else if (button_stop.pressed()) {
@@ -199,7 +199,7 @@ void SetupStateMachine() {
       {
         if (currentMenu == 1) 
         {
-          setupHelperValue = glasses[currentGlass].getFillweight();
+          setupHelperValue = glasses[currentGlass.getValue()].getFillweight();
           oldSetupHelperValue = 0;
           myScreen.stroke(0,0,0);
           sprintf(charBuf, "      %4d", setupHelperValue); 
@@ -211,7 +211,7 @@ void SetupStateMachine() {
         }
         else if (currentMenu == 2)
         {
-          setupHelperValue = glasses[currentGlass].getEmptyweight();
+          setupHelperValue = glasses[currentGlass.getValue()].getEmptyweight();
           myScreen.stroke(0,0,0);
           sprintf(charBuf, "      %4d", setupHelperValue); 
           setupHelperValue = 0;
@@ -238,14 +238,14 @@ void SetupStateMachine() {
       }
       if (button_stop.pressed()) {
         currentSetupState = SetupStateGlasSelected;
-        GlassSelectedScreen(currentGlass);
+        GlassSelectedScreen(currentGlass.getValue());
         Serial.println("change to SetupStateGlasSelected");
       } else if (button_start.pressed()) {
-        glasses[currentGlass].setFillweight(setupHelperValue);
+        glasses[currentGlass.getValue()].setFillweight(setupHelperValue);
         Serial.println("SAVE"); //TODO
-        //glasses[currentGlass].saveFillweightToEEPROM();
+        //glasses[currentGlass.getValue()].saveFillweightToEEPROM();
         currentSetupState = SetupStateGlasSelected;
-        GlassSelectedScreen(currentGlass);
+        GlassSelectedScreen(currentGlass.getValue());
         Serial.println("change to SetupStateGlasSelected");
       }
       break;
@@ -254,7 +254,7 @@ void SetupStateMachine() {
       delay(100);
       if (button_stop.pressed()) {
         currentSetupState = SetupStateGlasSelected;
-        GlassSelectedScreen(currentGlass);
+        GlassSelectedScreen(currentGlass.getValue());
         Serial.println("change to SetupStateGlasSelected");
       }
       if (newWeight != -999) { //unkalibriert
@@ -295,11 +295,11 @@ void SetupStateMachine() {
           myScreen.stroke(255,255,255);
         }
         if (button_start.pressed()) {
-          glasses[currentGlass].setEmptyweight(weight);
-          //glasses[currentGlass].saveEmptyweightToEEPROM();
+          glasses[currentGlass.getValue()].setEmptyweight(weight);
+          //glasses[currentGlass.getValue()].saveEmptyweightToEEPROM();
           Serial.println("Saved Emptyweight");
           currentSetupState = SetupStateGlasSelected;
-          GlassSelectedScreen(currentGlass);
+          GlassSelectedScreen(currentGlass.getValue());
           Serial.println("change to SetupStateGlasSelected");
         }
       } else {
@@ -309,7 +309,6 @@ void SetupStateMachine() {
         oldSetupHelperValue = 1;
       }
       break;
-
   }
 }
 
@@ -373,22 +372,195 @@ void ManuelStateMachine() {
 }
 
 void AutomaticStateMachine() {
-/*
+
+  //display angle
+  if(angle != oldDisplayedAngle){
+    myScreen.stroke(0,0,0);
+
+    sprintf(charBuf, "%d", oldDisplayedAngle);
+    drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin + SingleCharHeight*2,1);
+
+    oldDisplayedAngle = angle;
+    myScreen.stroke(17,222,88);
+
+    sprintf(charBuf, "%d", angle);
+    drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin + SingleCharHeight*2,1);
+    myScreen.stroke(255,255,255);
+  }
+  //display weight
+  newWeight = ReadScale();
+  if (newWeight != -999 && newWeight != weight) {
+    sprintf(charBuf, "%4d", weight);
+    myScreen.stroke(0,0,0);
+    drawMsg(charBuf,myScreen.width()-SingleCharWidth*3*5-Margin,SingleCharHeight*7+Margin,3);
+
+    weight = newWeight;
+    sprintf(charBuf, "%4d", weight);
+    myScreen.stroke(17,88,222);
+    drawMsg(charBuf,myScreen.width()-SingleCharWidth*3*5-Margin,SingleCharHeight*7+Margin,3);
+  }
+
   switch (currentAutomaticStates) {
     case AutomaticStateIdle:
+      
+      ChangeAutoparam(ReadEncoder());
+
+      if (currentAutomaticParam != lastAutomaticParam) {
+        ChangeDisplayedAutoparam();
+        lastAutomaticParam = currentAutomaticParam;
+      }
+
+      if (button_select.pressed() && currentAutomaticParam != Autoparam_Nothing) 
+      {
+        Serial.print("Automatic Param: ");
+        Serial.println(currentAutomaticParam);
+        myScreen.stroke(255,255,0);
+        drawMsg("CHANGING PARAM",Margin*5,myScreen.height()-SingleCharHeight*3-Margin*5,1);
+        myScreen.stroke(255,255,255);
+        switch (currentAutomaticParam) {
+          case Autoparam_Autostart:
+            if (autoStart.getValue()) {autoStart.setValue(false);} else {autoStart.setValue(true);}
+            myScreen.fillRect(SingleCharWidth*10 + Margin, myScreen.height()-SingleCharHeight*2-Margin*2, SingleCharWidth * 3, SingleCharHeight, 0x0000); 
+            ChangeDisplayedAutoparam();
+            BackFromParamToAutomaticIdle();
+            break;
+          case Autoparam_Glass:
+            currentAutomaticStates = AutomaticStateChangingGlass;
+            lastGlass = currentGlass.getValue();
+            break;
+          case Autoparam_Kulanz:
+            lastKulanz = kulanz.getValue();
+            currentAutomaticStates = AutomaticStateChangingKulanz;
+            break;
+          case Autoparam_MaxWinkel:
+            lastMaxAngle = maxAngle.getValue();
+            currentAutomaticStates = AutomaticStateChangingMaxWinkel;
+            break;
+          case Autoparam_Tara:
+            scale.tare(5);
+            BackFromParamToAutomaticIdle();
+            break;  
+        }
+      }
       if (button_start.pressed()) {
 
-        if (Waage kalibriert?){
+        // markierten Param nicht mehr hervorheben
+
+        /*if (Waage kalibriert?){
           currentAutomaticStates = AutomaticStateinProgress;
+            WEG: drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+            HIN: drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+
           startTimer();
         } else {
           Text anzeigen (nicht kalibriert)
-        }
-      //aUswahlmenü + quicktara
+        }*/
       }
-    case AutomaticStateRunning:
+      if (button_stop.pressed()) {
+        currentAutomaticParam = Autoparam_Nothing;
+      }
+
+      //aUswahlmenü + quicktara
+      break;
+
+    case AutomaticStateChangingGlass: 
+      change = ReadEncoder();
+      if (change != 0) {
+        if (change > 0) {
+          if(currentGlass.getValue() >= 3)
+          {
+            currentGlass.setValue(0);
+          } else {
+            currentGlass.setValue(currentGlass.getValue() + 1);
+          }
+        } else {
+          if(currentGlass.getValue() <= 0)
+          {
+            currentGlass.setValue(3);
+          } else {
+            currentGlass.setValue(currentGlass.getValue() - 1);
+          }
+        }
+        myScreen.stroke(255,255,0);
+        ChangeDisplayedAutoparamGlass();
+        myScreen.stroke(255,255,255);
+      }
+      //EncoderSelectMenuChanged(ReadEncoder(), currentMenu, 0, 3);
+      if (button_select.pressed()) {
+        BackFromParamToAutomaticIdle();
+      }
+      if (button_stop.pressed()) {
+        currentGlass.setValue(lastGlass);
+        ChangeDisplayedAutoparamGlass();
+        BackFromParamToAutomaticIdle();
+      }
+      break;
+    case AutomaticStateChangingKulanz:
+      change = ReadEncoder();
+      if (change != 0) {
+        kulanz.setValue(kulanz.getValue() + change);
+        Serial.print("kulanz: ");
+        Serial.println(kulanz.getValue());
+        myScreen.stroke(255,255,0);
+        ChangeDisplayedAutoparamKulanz();
+        myScreen.stroke(255,255,255);
+      }
+      if (button_select.pressed()) {
+
+        BackFromParamToAutomaticIdle();
+      }
+      if (button_stop.pressed()) {
+        kulanz.setValue(lastKulanz);
+        myScreen.stroke(255,255,0);
+        ChangeDisplayedAutoparamKulanz();
+        myScreen.stroke(255,255,255);
+        BackFromParamToAutomaticIdle();
+      }
+      break;
+    case AutomaticStateChangingMaxWinkel:
+      change = ReadEncoder();
+
+      if (change != 0 && (maxAngle.getValue() + change) <= 180 && (maxAngle.getValue() + change) > minAngle.getValue() + 1) {
+       maxAngle.setValue(maxAngle.getValue() + change);
+        Serial.print("maxAngle: ");
+        Serial.println(maxAngle.getValue());
+
+        myScreen.stroke(255,255,0);
+        ChangeDisplayedAutoparamMaxAngle();
+        myScreen.stroke(255,255,255);
+      }
+
+      if (angle > maxAngle.getValue()){
+        angle = maxAngle.getValue();
+      }
+      if (button_select.pressed()) {
+        BackFromParamToAutomaticIdle();
+      }
+      if (button_stop.pressed()) {
+        maxAngle.setValue(lastMaxAngle);
+        myScreen.stroke(255,255,0);
+        ChangeDisplayedAutoparamMaxAngle();
+        myScreen.stroke(255,255,255);
+        BackFromParamToAutomaticIdle();
+      }
+      break;
+  }
+}
+
+void BackFromParamToAutomaticIdle() {
+  myScreen.stroke(0,0,0);
+  drawMsg("CHANGING PARAM",Margin*5,myScreen.height()-SingleCharHeight*3-Margin*5,1);
+  myScreen.stroke(255,255,255);
+  currentAutomaticStates = AutomaticStateIdle;
+  Serial.println("currentAutomaticStates = AutomaticStateIdle");
+}
+
+    /*case AutomaticStateRunning:
       if (button_stop.pressed()) {
           currentAutomaticStates = AutomaticStateIdle;
+            HIN: drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+            WEG: drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+
           ChangeAngle(minAngle);
           UpdateProgressbar(0);
           break;
@@ -404,10 +576,13 @@ void AutomaticStateMachine() {
         startTimer();
         readyForNext = false;
       }
+      break;
 
     case AutomaticStateinProgress:
       if (button_stop.pressed() || timer abgelaufen) {
           currentAutomaticStates = AutomaticStateIdle;
+            HIN: drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+            WEG: drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
           ChangeAngle(minAngle);
           UpdateProgressbar(0);
           break;
@@ -429,7 +604,5 @@ void AutomaticStateMachine() {
 
       } 
       UpdateProgressbar(128.0 * ((float)gewicht / (float)zielgewicht));
-     
-  }
-*/
-}
+      break;
+    */ 

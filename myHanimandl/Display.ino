@@ -183,7 +183,7 @@ void ManuelInitScreen(){
 void AutomaticInitScreen(){
   myScreen.background(0,0,0);  // clear the screen with black
 
-  myScreen.stroke(255,0,255);
+  myScreen.stroke(255,255,255);
   drawMsg("Auto", Margin + SingleCharWidth*2,Margin,3);
 
   drawMsg("min:",myScreen.width()-(SingleCharWidth*8),Margin,1);
@@ -194,30 +194,105 @@ void AutomaticInitScreen(){
   drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin + SingleCharHeight,1);
   drawMsg("Ist:",myScreen.width()-(SingleCharWidth*8),Margin + SingleCharHeight*2,1);
 
-  drawMsg("Glastyp: ",Margin,SingleCharHeight*3+Margin,1);
-  drawMsg("TODO",SingleCharWidth*8*1 + Margin,SingleCharHeight*3+Margin,1);
+  drawMsg("TARA",myScreen.width()-(SingleCharWidth*5),Margin + SingleCharHeight*3,1);
 
+  ChangeDisplayedAutoparamGlass();
 
-  drawMsg("Ziel",Margin,SingleCharHeight*5+Margin,2);
-  drawMsg("XXXX",myScreen.width()/2-SingleCharWidth*2*6,SingleCharHeight*7+Margin,2);
+  drawMsg(" Ziel:",Margin,SingleCharHeight*5+Margin,2);
+
   drawMsg("g",myScreen.width()/2-SingleCharWidth*2*2,SingleCharHeight*7+Margin,2);
-  drawMsg("+Xg",myScreen.width()/2-SingleCharWidth*8,SingleCharHeight*9+Margin,1);
-
-  drawMsg("Ist",myScreen.width()/2,SingleCharHeight*5+Margin,2);
-  drawMsg("XXXX",myScreen.width()-SingleCharWidth*3*5-Margin,SingleCharHeight*7+Margin,3);
+  drawMsg("  g",myScreen.width()/2-SingleCharWidth*8,SingleCharHeight*9+Margin,1);
+  ChangeDisplayedAutoparamKulanz();
+  
+  drawMsg("Ist",myScreen.width()*0.6,SingleCharHeight*5+Margin,2);
   drawMsg("g",myScreen.width()-SingleCharWidth*3-Margin,SingleCharHeight*7+Margin,3);
 
-  myScreen.drawRect(Margin, SingleCharHeight*12, myScreen.width()-Margin, SingleCharHeight*2, 0xF00F);
 
-  drawMsg("Autostart: ",Margin,myScreen.height()-SingleCharHeight-Margin,1);
-  drawMsg("on",SingleCharWidth*10 + Margin,myScreen.height()-SingleCharHeight-Margin,1);
-  //TODOdrawMsg("off",Margin,Margin,1);
+  myScreen.drawRect(Margin, SingleCharHeight*11, myScreen.width()-Margin, SingleCharHeight*2, 0xF00F);
 
+  drawMsg("Autostart: ",Margin,myScreen.height()-SingleCharHeight*2-Margin*2,1);
+  if (autoStart.getValue()) {
+    drawMsg("on",SingleCharWidth*10 + Margin,myScreen.height()-SingleCharHeight*2-Margin*2,1);
+  }else {
+    drawMsg("off",SingleCharWidth*10 + Margin,myScreen.height()-SingleCharHeight*2-Margin*2,1);
+  }
+  
+  drawMsg("Nr. XXX ",myScreen.width()-(SingleCharWidth*7),myScreen.height()-SingleCharHeight*2-Margin*2,1);
+
+  drawMsg("      START",Margin,myScreen.height()-SingleCharHeight-Margin,1);
+  drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+  //drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
 
   // increase font size for text in loop()
   myScreen.setTextSize(4); 
 }
 
+void ChangeDisplayedAutoparam()
+{
+  myScreen.stroke(255,255,255);
+  ChangeDisplayedAutoparamOnOff(lastAutomaticParam);
+  myScreen.stroke(255,255,0);
+  ChangeDisplayedAutoparamOnOff(currentAutomaticParam);
+  myScreen.stroke(255,255,255);
+}
+
+void ChangeDisplayedAutoparamOnOff(int state) {
+
+  switch (state) {
+  case Autoparam_Autostart:
+      drawMsg("Autostart: ",Margin,myScreen.height()-SingleCharHeight*2-Margin*2,1);
+    if (autoStart.getValue()) {
+      drawMsg("on",SingleCharWidth*10 + Margin,myScreen.height()-SingleCharHeight*2-Margin*2,1);
+    }else {
+      drawMsg("off",SingleCharWidth*10 + Margin,myScreen.height()-SingleCharHeight*2-Margin*2,1);
+    }
+    break;
+  case Autoparam_Glass:
+    ChangeDisplayedAutoparamGlass();
+    //drawMsg("Glastyp: ",Margin,SingleCharHeight*3+Margin,1);
+    //sprintf(charBuf, "%d", currentGlass.getValue() + 1);
+    //drawMsg(charBuf,SingleCharWidth*8*1 + Margin,SingleCharHeight*3+Margin,1);
+    break;
+  case Autoparam_Kulanz:
+    drawMsg("  g",myScreen.width()/2-SingleCharWidth*8,SingleCharHeight*9+Margin,1);
+    ChangeDisplayedAutoparamKulanz();
+    break;
+  case Autoparam_MaxWinkel:
+    drawMsg("max:",myScreen.width()-(SingleCharWidth*8),Margin + SingleCharHeight,1);
+    ChangeDisplayedAutoparamMaxAngle();
+    break;
+  case Autoparam_Nothing:
+    break;
+  case Autoparam_Tara:
+    drawMsg("TARA",myScreen.width()-(SingleCharWidth*5),Margin + SingleCharHeight*3,1);
+    break;  
+  }
+}
+
+void ChangeDisplayedAutoparamKulanz() {
+  myScreen.fillRect(myScreen.width()/2-SingleCharWidth*9,SingleCharHeight*9+Margin, SingleCharWidth*3, SingleCharHeight, 0x0000); 
+  sprintf(charBuf, "%3d", kulanz.getValue());
+  drawMsg(charBuf,myScreen.width()/2-SingleCharWidth*9,SingleCharHeight*9+Margin,1);
+}
+
+void ChangeDisplayedAutoparamMaxAngle() {
+  myScreen.fillRect(myScreen.width()-(SingleCharWidth*4),Margin + SingleCharHeight, SingleCharWidth*3 + 1, SingleCharHeight, 0x0000); 
+  sprintf(charBuf, "%d", maxAngle.getValue());
+  drawMsg(charBuf,myScreen.width()-(SingleCharWidth*4),Margin + SingleCharHeight,1);
+}
+
+void ChangeDisplayedAutoparamGlass() {
+  //beide felder schwarz übermalen
+  myScreen.fillRect(SingleCharWidth*8, SingleCharHeight*3+Margin, SingleCharWidth + 1, SingleCharHeight, 0x0000); 
+  myScreen.fillRect(myScreen.width()/2-SingleCharWidth*2*6, SingleCharHeight*7, SingleCharWidth*2*4, SingleCharHeight*2, 0x0000); 
+
+  drawMsg("Glastyp: ",Margin,SingleCharHeight*3+Margin,1);
+  sprintf(charBuf, "%d", currentGlass.getValue() + 1);
+  drawMsg(charBuf,SingleCharWidth*8*1 + Margin,SingleCharHeight*3+Margin,1);
+
+  sprintf(charBuf, "%4d", glasses[currentGlass.getValue()].getFillweight());
+  drawMsg(charBuf,myScreen.width()/2-SingleCharWidth*2*6,SingleCharHeight*7+Margin,2);
+}
 
 void setCursor(SetupMenu item, color color)
 {

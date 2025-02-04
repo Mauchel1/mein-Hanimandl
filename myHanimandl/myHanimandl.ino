@@ -57,6 +57,18 @@ enum SetupMenu {
   Setup_Parameter  //last
 };
 
+enum AutomaticParam { 
+  Autoparam_Nothing, //first
+  Autoparam_Glass,
+  Autoparam_Kulanz,
+  Autoparam_MaxWinkel,
+  Autoparam_Tara,
+  Autoparam_Autostart //last
+};
+
+AutomaticParam currentAutomaticParam = Autoparam_Nothing;
+AutomaticParam lastAutomaticParam = Autoparam_Nothing;
+
 static const char * const SetupMenuEntries[] = {
   [Setup_Calibrate] = "Kalibrieren",
   [Setup_Servo] = "Servo",
@@ -107,7 +119,10 @@ enum ManuelStates {
 enum AutomaticStates {
   AutomaticStateIdle,
   AutomaticStateRunning,
-  AutomaticStateinProgress
+  AutomaticStateinProgress,
+  AutomaticStateChangingGlass,
+  AutomaticStateChangingKulanz,
+  AutomaticStateChangingMaxWinkel
 };
 
 char charBuf[16];
@@ -121,7 +136,6 @@ ManuelStates currentManuelState = ManuelStateStart;
 AutomaticStates currentAutomaticStates = AutomaticStateIdle;
 
 ConfigEntry_GLASS glasses[4];
-int currentGlass = 0;
 
 //!!!ACHTUNG NICHT REIHENFOLGE ÄNDERN - NUR NACH HINTEN ERGÄNZEN!!!
 ConfigEntry_INT minAngle = ConfigEntry_INT(0,0,0); // variable to store the minimum servo position
@@ -131,6 +145,13 @@ ConfigEntry_BOOL autoStart = ConfigEntry_BOOL(false,3,counterAllTime.getAddress(
 ConfigEntry_FLOAT factor = ConfigEntry_FLOAT(0,4,autoStart.getAddress() + sizeof(autoStart.getValue())); //internal factor for calibrating scale
 ConfigEntry_LONG scaleEmpty = ConfigEntry_LONG(-1,5,factor.getAddress() + sizeof(factor.getValue()));  
 // achtung, ab hier je 2 werte gewpeichert, also 2 Adressen weiter!
+
+int lastGlass = 0;
+int lastMaxAngle = 180;
+int lastKulanz = 5;
+int change = 0;
+ConfigEntry_INT currentGlass;
+ConfigEntry_INT kulanz; 
 
 
 void setup() {
@@ -164,6 +185,10 @@ void setup() {
   //  glasses[i].saveEmptyweightToEEPROM();
   //  glasses[i].saveFillweightToEEPROM();
   //}
+  
+  currentGlass = ConfigEntry_INT(0,10, glasses[3].getAddress() + sizeof(glasses[3].getEmptyweight()) + sizeof(glasses[3].getFillweight()));
+  kulanz = ConfigEntry_INT(5,11, currentGlass.getAddress() + sizeof(currentGlass.getValue()));
+
 
   loadInitialEEPROMValues();
 
@@ -236,6 +261,27 @@ void ChangeAngle(int change, bool goOverBoundrys = false)
     if ((angle + change) < minAngle.getValue()){return;}
   }
   angle += change;
+}
+
+void ChangeAutoparam(int change)
+{
+  if (change == 0) return;
+  if (change > 0) {
+    if(currentAutomaticParam >= Autoparam_Autostart)
+    {
+      currentAutomaticParam = Autoparam_Nothing;
+    } else {
+      currentAutomaticParam = currentAutomaticParam + 1;
+    }
+  } else {
+    if(currentAutomaticParam <= Autoparam_Nothing)
+    {
+      currentAutomaticParam = Autoparam_Autostart;
+    } else {
+      currentAutomaticParam = currentAutomaticParam -1;
+    }
+  }
+
 }
 
 bool Regelung() 

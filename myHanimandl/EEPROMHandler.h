@@ -25,6 +25,8 @@ public:
     {
       this->value = initvalue;
     }
+    //Standardkonstruktor
+    ConfigEntry_INT() : ConfigEntry(0, 0), value(0) {}
 
 void setValue(int value){this->value = value;}
 int getValue(){return value;}
