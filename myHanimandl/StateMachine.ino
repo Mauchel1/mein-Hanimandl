@@ -445,22 +445,21 @@ void AutomaticStateMachine() {
       if (button_start.pressed()) {
 
         // markierten Param nicht mehr hervorheben
+        currentAutomaticParam = Autoparam_Nothing;
+        ChangeDisplayedAutoparam();
 
-        /*if (Waage kalibriert?){
-          currentAutomaticStates = AutomaticStateinProgress;
-            WEG: drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
-            HIN: drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+        currentAutomaticStates = AutomaticStateinProgress;
+        myScreen.stroke(0,0,0);
+        drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+        myScreen.stroke(255,255,255);
+        drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+        automaticTimeout.start();
 
-          startTimer();
-        } else {
-          Text anzeigen (nicht kalibriert)
-        }*/
       }
+
       if (button_stop.pressed()) {
         currentAutomaticParam = Autoparam_Nothing;
       }
-
-      //aUswahlmenü + quicktara
       break;
 
     case AutomaticStateChangingGlass: 
@@ -518,21 +517,7 @@ void AutomaticStateMachine() {
       }
       break;
     case AutomaticStateChangingMaxWinkel:
-      change = ReadEncoder();
-
-      if (change != 0 && (maxAngle.getValue() + change) <= 180 && (maxAngle.getValue() + change) > minAngle.getValue() + 1) {
-       maxAngle.setValue(maxAngle.getValue() + change);
-        Serial.print("maxAngle: ");
-        Serial.println(maxAngle.getValue());
-
-        myScreen.stroke(255,255,0);
-        ChangeDisplayedAutoparamMaxAngle();
-        myScreen.stroke(255,255,255);
-      }
-
-      if (angle > maxAngle.getValue()){
-        angle = maxAngle.getValue();
-      }
+      ChangeMaxAngle();
       if (button_select.pressed()) {
         BackFromParamToAutomaticIdle();
       }
@@ -544,9 +529,87 @@ void AutomaticStateMachine() {
         BackFromParamToAutomaticIdle();
       }
       break;
+    case AutomaticStateRunning:
+      if (button_stop.pressed()) {
+        currentAutomaticStates = AutomaticStateIdle;
+        myScreen.stroke(0,0,0);
+        drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+        myScreen.stroke(255,255,255);
+        drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+
+        angle = minAngle.getValue();
+        //UpdateProgressbar(0); TODO
+        break;
+      }
+      if (button_start.pressed()) {
+        currentAutomaticStates = AutomaticStateinProgress;
+        automaticTimeout.start();
+      }
+      
+      if (autoStart.getValue()) {
+        switch (currentWeightState) {
+          case WeightEmpty:
+            if (abs(newWeight) < 15) { //Waage leer mit Glas drauf
+              scale.tare();
+              currentWeightState = WeightEmptyGlass;
+            } 
+            break;
+          case WeightEmptyGlass: 
+            currentAutomaticStates = AutomaticStateinProgress;
+            automaticTimeout.start();
+            break;
+          case WeightUnknown:
+            if (abs(newWeight + glasses[currentGlass.getValue()].getEmptyweight()) < 15) { //Waage leer
+              currentWeightState = WeightEmpty;
+            } 
+            break;
+        }
+      }
+      break;
+    case AutomaticStateinProgress:
+
+      if (button_stop.pressed() || automaticTimeout.update()) {
+        currentAutomaticStates = AutomaticStateIdle;
+        myScreen.stroke(0,0,0);
+        drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+        myScreen.stroke(255,255,255);
+        drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+        angle = minAngle.getValue();
+        Serial.println("Back to AutomaticStateIdle");
+        automaticTimeout.stop();
+        //UpdateProgressbar(0); //TODO
+        break;
+      }
+
+      ChangeMaxAngle();
+      //if(tara not set) idle und break; //TODO brauch ich das überhaupt?
+
+      if (Regelung()) { // fertig abgefüllt
+        Serial.println("Glas fertig");
+        //TODO signal geben;
+        //TODO Glascounter + 1
+        if (autoStart.getValue()) {
+          //TODO
+          currentAutomaticStates = AutomaticStateRunning;
+          currentWeightState = WeightUnknown;
+          //Pausetimer starten?
+        } else {
+          currentAutomaticStates = AutomaticStateIdle;
+          myScreen.stroke(0,0,0);
+          drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+          myScreen.stroke(255,255,255);
+          drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+          Serial.println("Back to AutomaticStateIdle");
+          automaticTimeout.stop();
+        }
+        angle = minAngle.getValue();
+      } 
+      //UpdateProgressbar(128.0 * ((float)gewicht / (float)zielgewicht)); TODO
+      break;
+     
   }
 }
-
+    
 void BackFromParamToAutomaticIdle() {
   myScreen.stroke(0,0,0);
   drawMsg("CHANGING PARAM",Margin*5,myScreen.height()-SingleCharHeight*3-Margin*5,1);
@@ -555,54 +618,20 @@ void BackFromParamToAutomaticIdle() {
   Serial.println("currentAutomaticStates = AutomaticStateIdle");
 }
 
-    /*case AutomaticStateRunning:
-      if (button_stop.pressed()) {
-          currentAutomaticStates = AutomaticStateIdle;
-            HIN: drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
-            WEG: drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
+void ChangeMaxAngle() {
+      change = ReadEncoder();
 
-          ChangeAngle(minAngle);
-          UpdateProgressbar(0);
-          break;
-      }
-      if (button_start.pressed()) {
-        currentAutomaticStates = AutomaticStateinProgress;
-        startTimer();
-      }
-      readyForNext aktualisieren
-      evtl bei leerer Waage einmal tara gegen drift?
-      if (autoStart && readyForNext) {
-        currentAutomaticStates = AutomaticStateinProgress;
-        startTimer();
-        readyForNext = false;
-      }
-      break;
+      if (change != 0 && (maxAngle.getValue() + change) <= 180 && (maxAngle.getValue() + change) > minAngle.getValue() + 1) {
+        maxAngle.setValue(maxAngle.getValue() + change);
+        Serial.print("maxAngle: ");
+        Serial.println(maxAngle.getValue());
 
-    case AutomaticStateinProgress:
-      if (button_stop.pressed() || timer abgelaufen) {
-          currentAutomaticStates = AutomaticStateIdle;
-            HIN: drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
-            WEG: drawMsg("NOTHALT!",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
-          ChangeAngle(minAngle);
-          UpdateProgressbar(0);
-          break;
+        myScreen.stroke(255,255,0);
+        ChangeDisplayedAutoparamMaxAngle();
+        myScreen.stroke(255,255,255);
       }
 
-      if(tara not set) idle und break;
-
-      if (Regelung()) { // fertig abgefüllt
-        Serial.println("Glas fertig");
-        //TODO signal geben;
-        if (autoStart) {
-          currentAutomaticStates = AutomaticStateRunning;
-          Pausetimer starten?
-        } else {
-          currentAutomaticStates = AutomaticStateIdle;
-        }
-        
-        ChangeAngle(minAngle);
-
-      } 
-      UpdateProgressbar(128.0 * ((float)gewicht / (float)zielgewicht));
-      break;
-    */ 
+      if (angle > maxAngle.getValue()){
+        angle = maxAngle.getValue();
+      }
+}

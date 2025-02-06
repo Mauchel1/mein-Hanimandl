@@ -86,9 +86,10 @@ int oldAngle = 0;    // variable to store the old servo position
 int oldDisplayedAngle = 0;    // variable to store the old servo position
 long oldPosition  = -999;
 long oldReading = 0;
-bool readyForNext = false;
+//bool readyForNext = false;
 
 noDelay buzzertimer(1000, false);
+noDelay automaticTimeout(30000, false);
 bool buzzerOn = false;
 
 TFT myScreen = TFT(TFT_CS, TFT_DC, TFT_RST);
@@ -125,6 +126,12 @@ enum AutomaticStates {
   AutomaticStateChangingMaxWinkel
 };
 
+enum WeightStates {
+  WeightUnknown,
+  WeightEmpty,
+  WeightEmptyGlass
+};
+
 char charBuf[16];
 long weight = 0;
 long newWeight = -999;
@@ -134,6 +141,7 @@ int oldSetupHelperValue;
 SetupStates currentSetupState = SetupStateMain;
 ManuelStates currentManuelState = ManuelStateStart;
 AutomaticStates currentAutomaticStates = AutomaticStateIdle;
+WeightStates currentWeightState = WeightUnknown;
 
 ConfigEntry_GLASS glasses[4];
 
@@ -287,8 +295,14 @@ void ChangeAutoparam(int change)
 bool Regelung() 
 {
   //TODO winkel regeln
-  ChangeAngle(minAngle.getValue()); 
-  return false;
+  //ChangeAngle(minAngle.getValue()); 
+
+  if (newWeight >= glasses[currentGlass.getValue()].getFillweight() + kulanz.getValue()) {
+    return true;
+  } else {
+    return false;
+  }
+  
 }
 
 void loadInitialEEPROMValues()
@@ -327,10 +341,10 @@ void loop() {
 
   StateMachine();
 
-  if(buzzertimer.update())
+  if(buzzertimer.update()) 
   {//Checks to see if set time has past
     if (!buzzerOn){
-      tone(BUZZER_PIN, 1000); // Sende 1KHz Tonsignal
+      tone(BUZZER_PIN, 1000); // Sende 1KHz Tonsignal //TODO nicht korrekt, wird immer wieder aufgerufen
       buzzerOn = true;
     }
     else {
