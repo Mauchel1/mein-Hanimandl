@@ -86,7 +86,7 @@ int oldAngle = 0;    // variable to store the old servo position
 int oldDisplayedAngle = 0;    // variable to store the old servo position
 long oldPosition  = -999;
 long oldReading = 0;
-//bool readyForNext = false;
+int currentProgress = 0;
 
 noDelay buzzertimer(1000, false);
 noDelay automaticTimeout(30000, false);

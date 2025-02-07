@@ -309,6 +309,22 @@ void changeCurrentMenu (SetupMenu newMenu)
   Serial.println(currentMenu);
 }
 
+void UpdateProgressbar(int percent) 
+{
+  if (currentProgress != percent) {
+      Serial.print("percent: " );
+      Serial.println(percent);
+
+    if (currentProgress < percent) {//kleiner geworden, hinten schwarz machen
+      //myScreen.stroke(0,0,0);
+      myScreen.fillRect(Margin + 1, SingleCharHeight*11 +1, myScreen.width()-Margin -2, SingleCharHeight*2 -2, 0x0000); 
+    }
+    currentProgress = percent;
+    //myScreen.stroke(0,0,0);
+    myScreen.fillRect(Margin + 1, SingleCharHeight*11 +1, (percent * (myScreen.width()-Margin -2)) / 100, SingleCharHeight*2 -2, 0x5225); 
+  }
+}
+
 void EncoderSelectMenuChanged(int change, int menuItem, int min, int max)
 {
   if (change == 0) return;

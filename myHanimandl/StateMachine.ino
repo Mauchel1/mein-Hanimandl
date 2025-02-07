@@ -323,7 +323,6 @@ void ManuelStateMachine() {
     sprintf(charBuf, "%4d", weight);
     drawMsg(charBuf, Margin, myScreen.height()-(SingleCharHeight*8), 4);    
 
-
     myScreen.stroke(255,0,255);
     drawMsg("PAUSE",SingleCharWidth * 2 * 1, myScreen.height()-(SingleCharHeight*2*3+Margin),2); 
 
@@ -352,9 +351,7 @@ void ManuelStateMachine() {
       sprintf(charBuf, "%d", angle);
       drawMsg(charBuf,myScreen.width()-(SingleCharWidth*2*4),Margin + SingleCharHeight*3,2);
     }
-
     
-
     newWeight = ReadScale();
     if (newWeight != -999 && newWeight != weight) {
       sprintf(charBuf, "%4d", weight);
@@ -367,12 +364,9 @@ void ManuelStateMachine() {
       drawMsg(charBuf, Margin, myScreen.height()-(SingleCharHeight*8), 4);
     }
   }
-
-
 }
 
 void AutomaticStateMachine() {
-
   //display angle
   if(angle != oldDisplayedAngle){
     myScreen.stroke(0,0,0);
@@ -394,6 +388,8 @@ void AutomaticStateMachine() {
     myScreen.stroke(0,0,0);
     drawMsg(charBuf,myScreen.width()-SingleCharWidth*3*5-Margin,SingleCharHeight*7+Margin,3);
 
+    //Serial.print("newWeight: " );
+    //Serial.println(newWeight);
     weight = newWeight;
     sprintf(charBuf, "%4d", weight);
     myScreen.stroke(17,88,222);
@@ -538,7 +534,7 @@ void AutomaticStateMachine() {
         drawMsg("   BACK",myScreen.width()-(SingleCharWidth*9),myScreen.height()-SingleCharHeight-Margin,1);
 
         angle = minAngle.getValue();
-        //UpdateProgressbar(0); TODO
+        UpdateProgressbar(0); 
         break;
       }
       if (button_start.pressed()) {
@@ -549,7 +545,7 @@ void AutomaticStateMachine() {
       if (autoStart.getValue()) {
         switch (currentWeightState) {
           case WeightEmpty:
-            if (abs(newWeight) < 15) { //Waage leer mit Glas drauf
+            if (abs(weight) < 15) { //Waage leer mit Glas drauf
               scale.tare();
               currentWeightState = WeightEmptyGlass;
             } 
@@ -559,7 +555,7 @@ void AutomaticStateMachine() {
             automaticTimeout.start();
             break;
           case WeightUnknown:
-            if (abs(newWeight + glasses[currentGlass.getValue()].getEmptyweight()) < 15) { //Waage leer
+            if (abs(weight + glasses[currentGlass.getValue()].getEmptyweight()) < 15) { //Waage leer
               currentWeightState = WeightEmpty;
             } 
             break;
@@ -577,7 +573,7 @@ void AutomaticStateMachine() {
         angle = minAngle.getValue();
         Serial.println("Back to AutomaticStateIdle");
         automaticTimeout.stop();
-        //UpdateProgressbar(0); //TODO
+        UpdateProgressbar(0); 
         break;
       }
 
@@ -604,7 +600,8 @@ void AutomaticStateMachine() {
         }
         angle = minAngle.getValue();
       } 
-      //UpdateProgressbar(128.0 * ((float)gewicht / (float)zielgewicht)); TODO
+
+      UpdateProgressbar(float(abs(weight) / float(glasses[currentGlass.getValue()].getFillweight()))*100); //TODO
       break;
      
   }
