@@ -87,6 +87,9 @@ int oldDisplayedAngle = 0;    // variable to store the old servo position
 long oldPosition  = -999;
 long oldReading = 0;
 int currentProgress = 0;
+float Kp = 0.8; //TODO passt das? parametrisierbar machen?
+float Ki = 0.2; //TODO passt das? parametrisierbar machen?
+
 
 noDelay buzzertimer(1000, false);
 noDelay automaticTimeout(30000, false);
@@ -136,6 +139,7 @@ char charBuf[16];
 long weight = 0;
 long newWeight = -999;
 int newTaraweight;
+float integral = 0;
 int setupHelperValue;
 int oldSetupHelperValue;
 SetupStates currentSetupState = SetupStateMain;
@@ -295,9 +299,19 @@ void ChangeAutoparam(int change)
 bool Regelung() 
 {
   //TODO winkel regeln
+        int error = glasses[currentGlass.getValue()].getFillweight() + kulanz.getValue() - weight;
+        integral += error;
+        integral = constrain(integral, -180, 180); // Begrenze das Integral, um zu hohe Werte zu verhindern
+        float output = Kp * error + Ki * integral;
+        output = constrain(output, minAngle.getValue(), maxAngle.getValue());
+        angle = output;
+        Serial.print("output: ");
+        Serial.println(output);
+                
   //ChangeAngle(minAngle.getValue()); 
 
-  if (newWeight >= glasses[currentGlass.getValue()].getFillweight() + kulanz.getValue()) {
+  if (weight >= glasses[currentGlass.getValue()].getFillweight() + kulanz.getValue()) {
+    Serial.println("Zielgewicht erreicht. Ventil geschlossen.");
     return true;
   } else {
     return false;

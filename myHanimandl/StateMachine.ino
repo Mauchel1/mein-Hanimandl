@@ -265,11 +265,11 @@ void SetupStateMachine() {
           myScreen.stroke(255,255,255);
           oldSetupHelperValue = 0;
         }
-        if(button_select.pressed() && abs(newWeight) < 20) { // nur bei kleinem drift tara, sonst neu kalibrieren!
+        if(button_select.pressed()) { 
           scale.tare();
           Serial.println("TARA");
         } 
-        if (abs(newWeight) > 20 ) {
+        if (abs(newWeight) > 15 ) {
           if (setupHelperValue == 0){
             myScreen.stroke(255,0,255);
             myScreen.text("LEER > TARA", Margin_Item, (3 * 20) + Height_Header ); 
@@ -548,15 +548,20 @@ void AutomaticStateMachine() {
             if (abs(weight) < 15) { //Waage leer mit Glas drauf
               scale.tare();
               currentWeightState = WeightEmptyGlass;
+              Serial.println("State Waage leer mit Glas drauf");
             } 
             break;
           case WeightEmptyGlass: 
             currentAutomaticStates = AutomaticStateinProgress;
             automaticTimeout.start();
+            Serial.println("State AutomaticStateinProgress");
             break;
           case WeightUnknown:
+            Serial.println(abs(weight + glasses[currentGlass.getValue()].getEmptyweight()));
             if (abs(weight + glasses[currentGlass.getValue()].getEmptyweight()) < 15) { //Waage leer
               currentWeightState = WeightEmpty;
+              UpdateProgressbar(0);
+              Serial.println("State Waage leer");
             } 
             break;
         }
@@ -578,17 +583,16 @@ void AutomaticStateMachine() {
       }
 
       ChangeMaxAngle();
-      //if(tara not set) idle und break; //TODO brauch ich das überhaupt?
 
       if (Regelung()) { // fertig abgefüllt
         Serial.println("Glas fertig");
+        integral = 0;
         //TODO signal geben;
         //TODO Glascounter + 1
         if (autoStart.getValue()) {
-          //TODO
+          Serial.println("Back to AutomaticStateRunning");
           currentAutomaticStates = AutomaticStateRunning;
           currentWeightState = WeightUnknown;
-          //Pausetimer starten?
         } else {
           currentAutomaticStates = AutomaticStateIdle;
           myScreen.stroke(0,0,0);
