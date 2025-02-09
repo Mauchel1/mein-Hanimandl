@@ -242,8 +242,8 @@ void SetupStateMachine() {
         Serial.println("change to SetupStateGlasSelected");
       } else if (button_start.pressed()) {
         glasses[currentGlass.getValue()].setFillweight(setupHelperValue);
-        Serial.println("SAVE"); //TODO
-        //glasses[currentGlass.getValue()].saveFillweightToEEPROM();
+        Serial.println("SAVE"); 
+        glasses[currentGlass.getValue()].saveFillweightToEEPROM();
         currentSetupState = SetupStateGlasSelected;
         GlassSelectedScreen(currentGlass.getValue());
         Serial.println("change to SetupStateGlasSelected");
@@ -296,7 +296,7 @@ void SetupStateMachine() {
         }
         if (button_start.pressed()) {
           glasses[currentGlass.getValue()].setEmptyweight(weight);
-          //glasses[currentGlass.getValue()].saveEmptyweightToEEPROM();
+          glasses[currentGlass.getValue()].saveEmptyweightToEEPROM(); 
           Serial.println("Saved Emptyweight");
           currentSetupState = SetupStateGlasSelected;
           GlassSelectedScreen(currentGlass.getValue());
@@ -601,7 +601,7 @@ void AutomaticStateMachine() {
         angle = minAngle.getValue();
       } 
 
-      UpdateProgressbar(float(abs(weight) / float(glasses[currentGlass.getValue()].getFillweight()))*100); //TODO
+      UpdateProgressbar(float(abs(weight) / float(glasses[currentGlass.getValue()].getFillweight()))*100);
       break;
      
   }
